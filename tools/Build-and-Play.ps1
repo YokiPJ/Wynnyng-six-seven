@@ -101,14 +101,43 @@ function Assert-TestResult([string]$Path, [string]$Name) {
         throw "$Name nao produziu um resultado XML. Consulte o log dessa etapa."
     }
     [xml]$report = Get-Content -LiteralPath $Path -Raw
+    if ($report.DocumentElement.LocalName -ne 'test-run') { throw "$Name produziu um XML NUnit invalido: $Path" }
     $cases = @($report.SelectNodes('//*[local-name()="test-case"]'))
     $result = $report.DocumentElement.GetAttribute('result')
     $passed = @($cases | Where-Object { $_.GetAttribute('result') -in @('Passed', 'Success') })
-    $failed = @($cases | Where-Object { $_.GetAttribute('result') -in @('Failed', 'Failure', 'Error') })
-    if ($passed.Count -eq 0 -or $failed.Count -ne 0 -or $result -notin @('Passed', 'Success')) {
-        throw "$Name nao passou (resultado: $result; casos: $($cases.Count)). Consulte $Path"
+    # Unity's NUnit 3.5 fork promotes an ignored child to Skipped:Ignored for the
+    # entire suite, even when its other tests passed. Only this graphical test
+    # may be ignored by our batch runner; never accept arbitrary skipped tests.
+    $visualTest = 'Wynnyng.Tests.PlayMode.Phase01AAcceptanceTests.GraphicalPlayerRendersGrassInsteadOfOnlyTheClearBackground'
+    $visualReason = 'Pixel acceptance requires the graphical Editor with the Game view visible.'
+    $allowedSkipped = @($cases | Where-Object {
+        $reason = $_.SelectSingleNode('./reason/message')
+        $Name -eq 'PlayMode' -and $_.GetAttribute('fullname') -ceq $visualTest -and
+            $_.GetAttribute('result') -eq 'Skipped' -and $_.GetAttribute('label') -eq 'Ignored' -and
+            $null -ne $reason -and $reason.InnerText.Trim() -ceq $visualReason
+    })
+    $unexpected = @($cases | Where-Object { $_ -notin $passed -and $_ -notin $allowedSkipped })
+    # A failed suite can contain passed cases, e.g. when OneTimeTearDown fails.
+    $invalidSuites = @($report.SelectNodes('//*[local-name()="test-run" or local-name()="test-suite"]') | Where-Object {
+        $state = $_.GetAttribute('result')
+        $ignored = $state -eq 'Skipped:Ignored' -or ($state -eq 'Skipped' -and $_.GetAttribute('label') -eq 'Ignored')
+        $containsVisualTest = $allowedSkipped.Count -eq 1 -and $allowedSkipped[0] -in @($_.SelectNodes('.//*[local-name()="test-case"]'))
+        $state -notin @('Passed', 'Success') -and -not ($ignored -and $containsVisualTest)
+    })
+    if ($passed.Count -eq 0 -or $unexpected.Count -ne 0 -or $invalidSuites.Count -ne 0 -or $allowedSkipped.Count -gt 1) {
+        $diagnostics = @(@($unexpected) + @($invalidSuites) | Select-Object -First 8 | ForEach-Object {
+            $testName = $_.GetAttribute('fullname')
+            if ([string]::IsNullOrWhiteSpace($testName)) { $testName = $_.LocalName }
+            $message = $_.SelectSingleNode('./failure/message | ./reason/message')
+            $detail = if ($null -eq $message) { '' } else { $message.InnerText.Trim() }
+            "${testName}: $($_.GetAttribute('result')) $($_.GetAttribute('label')) $detail"
+        })
+        throw "$Name nao passou (resultado: $result; aprovados: $($passed.Count); casos: $($cases.Count)).`n$($diagnostics -join [Environment]::NewLine)`nConsulte $Path"
     }
-    Write-Host "[Wynnyng] ${Name}: $($cases.Count) casos, $result."
+    Write-Host "[Wynnyng] ${Name}: $($passed.Count) aprovados; $($allowedSkipped.Count) ignorados; $($cases.Count) casos."
+    if ($allowedSkipped.Count -eq 1) {
+        Write-Host '[Wynnyng] Apenas o teste de pixels foi ignorado: exige Editor grafico. A verificacao visual continua pendente.'
+    }
 }
 
 if ($env:OS -ne 'Windows_NT') { throw 'Este comando gera o player usando o Unity instalado no Windows.' }

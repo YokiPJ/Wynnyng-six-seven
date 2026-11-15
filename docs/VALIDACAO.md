@@ -76,7 +76,7 @@ O log enviado pelo usuário depois da entrega identificou **CS0266** no gerador:
 |---|---|
 | Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |
 | Resolução efetiva dos pacotes | Package Manager; primeiro import gera `packages-lock.json` |
-| EditMode | Test Runner: 61 casos esperados, incluindo validação de valores não finitos |
+| EditMode | Usuário confirmou 61 aprovados na revisão f6a28cc; repetir após mudanças no motor |
 | PlayMode | Test Runner: 14 testes, incluindo transform inválido e um caso gráfico ignorado em batch |
 | Player Windows | O preparador gera no PC usando o Unity instalado; não foi gerado/executado aqui |
 | HLSL, materiais e layout da interface | Inspeção em Play no Editor com renderização habilitada |
@@ -84,6 +84,14 @@ O log enviado pelo usuário depois da entrega identificou **CS0266** no gerador:
 | 60 FPS / GTX 1060 / GC da integração | Development Build Windows e Profiler após aquecimento |
 
 **O aceite do Unity permanece aberto.** Testes .NET e inspeção de fontes não equivalem a compilar/executar o projeto no Editor. Não há medição de GPU, draw calls, FPS ou PhysX feita nesta entrega.
+
+## Agregado PlayMode ignorado
+
+O console da revisão `f6a28cc` enviado pelo usuário confirmou preparação concluída (290 s), EditMode com **61 aprovados** (25 s) e PlayMode com 14 casos/agregado `Skipped:Ignored` (35 s). A geração parou na leitura do XML, antes do build. Sem o XML individual não se conclui que os 13 casos físicos passaram.
+
+Uma reprodução local usando o DLL oficial de `com.unity.ext.nunit` **2.0.3**, dependência do Test Framework **1.4.5**, confirmou que adicionar 13 resultados aprovados e um ignorado a uma suíte produz exatamente `Skipped:Ignored`, 13 passados, 1 ignorado e 0 falhas. A reprodução monta resultados NUnit; não executa Unity nem os testes do projeto.
+
+Corrigida a validação PowerShell: aceita apenas o caso gráfico conhecido com nome, estado e motivo exatos; verifica todos os casos e suítes; rejeita outros ignores, inconclusivos, ausência de aprovações e falhas mesmo em suítes cujas folhas passaram. Testes de regressão cobrem esse agregado e a apresentação do nome/motivo de erros. Os testes locais do script passaram em PowerShell 7.4.6. A CI Windows executa o mesmo conjunto em PowerShell 7 e Windows PowerShell 5.1. A confirmação do build e do player no PC continua pendente.
 
 ## APIs conferidas em fontes oficiais
 

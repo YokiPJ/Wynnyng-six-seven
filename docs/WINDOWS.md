@@ -20,7 +20,7 @@ O preparador consulta a branch `codex/phase-0-1a`, baixa uma revisão fixa por S
 4. Build Windows x86_64/Mono pelo `BuildPipeline.BuildPlayer`, com verificação de resultado, erros, EXE, `UnityPlayer.dll` e pasta `_Data`.
 5. Criação do atalho **Jogar Wynnyng** na área de trabalho, quando ela estiver disponível, e abertura do jogo.
 
-O teste de pixels exige Editor gráfico/Game visível e é ignorado no batch. A geração automática não é prova de inspeção visual ou de 60 FPS na GTX 1060.
+O teste de pixels exige Editor gráfico/Game visível e é ignorado no batch. O NUnit usado pelo Unity pode marcar o relatório inteiro como `Skipped:Ignored` por causa desse único caso. O preparador confere os resultados individuais e aceita somente esse teste visual, identificado pelo nome completo e pelo motivo esperado. Outros testes ignorados, resultados inconclusivos, ausência de casos aprovados ou qualquer falha interrompem a geração. A janela informa separadamente aprovados e ignorados; o teste de pixels continua pendente. A geração automática não é prova de inspeção visual ou de 60 FPS na GTX 1060.
 
 O player real será `Builds/Windows/Wynnyng.exe` dentro da revisão baixada. O atalho aponta para ele e permite jogar depois sem iniciar o Editor. Mantenha a pasta do player completa, com as DLLs e `Wynnyng_Data`. O botão **Sair** encerra o aplicativo; no Editor, encerra o Play.
 
@@ -28,7 +28,7 @@ O player real será `Builds/Windows/Wynnyng.exe` dentro da revisão baixada. O a
 
 A janela mostra a etapa que falhou. Os logs, XMLs dos testes e `build-result.json` ficam em `work/WindowsBuild/` dentro da revisão. O preparador não produz um recibo de sucesso sem os arquivos do player. Se faltar o Editor ou o suporte Windows, a mensagem indica a instalação pelo Unity Hub.
 
-Em caso de saída do Unity com erro, o script também mostra os diagnósticos encontrados no final do log, incluindo erros `CSxxxx`, sem exigir abrir o Bloco de Notas. Depois de uma correção publicada, basta executar novamente o mesmo preparador: ele consulta a revisão atual e baixa os arquivos corrigidos automaticamente.
+Em caso de saída do Unity com erro, o script também mostra os diagnósticos encontrados no final do log, incluindo erros `CSxxxx`, sem exigir abrir o Bloco de Notas. Uma rejeição do XML mostra os nomes e motivos dos resultados problemáticos. Depois de uma correção publicada, basta executar novamente o mesmo preparador: ele consulta a revisão atual e baixa os arquivos corrigidos automaticamente.
 
 Nenhum Editor Unity ou licença estava disponível no ambiente que produziu esta entrega. O player do jogo não foi compilado aqui. O preparador foi compilado separadamente; seus testes de argumentos, arquivos e download não equivalem a testar o jogo.
 

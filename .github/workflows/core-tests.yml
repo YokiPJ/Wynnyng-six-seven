@@ -13,8 +13,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Validate PowerShell build gates
+      - name: Validate PowerShell 7 build gates
         shell: pwsh
+        run: ./tools/Test-BuildPipeline.ps1
+      - name: Validate Windows PowerShell 5.1 build gates
+        shell: powershell
         run: ./tools/Test-BuildPipeline.ps1
       - name: Compile Windows preparation executable
         run: dotnet build tools/WindowsBootstrap/WindowsBootstrap.csproj -c Release -o work/bootstrap

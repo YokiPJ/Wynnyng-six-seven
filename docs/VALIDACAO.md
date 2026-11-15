@@ -23,7 +23,7 @@ python3 tools/validate_project.py
 dotnet test tools/HeadlessChecks/HeadlessChecks.csproj --configuration Release
 ```
 
-O XML TRX da execução acompanha o pacote de entrega como `core-tests.trx`. A CI em `.github/workflows/core-tests.yml` executa as verificações estruturais e o núcleo sem exigir licença Unity.
+A CI em `.github/workflows/core-tests.yml` também executou com **sucesso** no GitHub: [Core CSharp tests, execução 43674594509](https://github.com/YokiPJ/Wynnyng-six-seven/actions/runs/43674594509), referente ao commit de código `94017c7d4df46b2b4788ff29a020bd02b66194ca`. O XML TRX fica no artefato `core-test-results` dessa execução. Essa CI não exige licença Unity e não executa o motor.
 
 ## Preparado, sem execução neste ambiente
 

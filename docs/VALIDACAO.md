@@ -70,6 +70,8 @@ Foram reforçadas as configurações não finitas e o contrato de transform do b
 
 ## Preparado, sem execução neste ambiente
 
+O log enviado pelo usuário depois da entrega identificou **CS0266** no gerador: os contadores `int` de `BuildSummary` eram atribuídos a campos `uint` do recibo. A etapa de preparação não chegou a executar seu método, pois a compilação dos scripts falhou. Corrigidos os campos para `int` e adicionado diagnóstico do log na janela do preparador, com teste de extração/deduplicação da mensagem real. Essa correção resolve os dois erros de tipo observados; não é evidência de um build completo do player.
+
 | Aceite | Como verificar |
 |---|---|
 | Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |

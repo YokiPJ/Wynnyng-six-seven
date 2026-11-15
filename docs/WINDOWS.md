@@ -28,6 +28,8 @@ O player real será `Builds/Windows/Wynnyng.exe` dentro da revisão baixada. O a
 
 A janela mostra a etapa que falhou. Os logs, XMLs dos testes e `build-result.json` ficam em `work/WindowsBuild/` dentro da revisão. O preparador não produz um recibo de sucesso sem os arquivos do player. Se faltar o Editor ou o suporte Windows, a mensagem indica a instalação pelo Unity Hub.
 
+Em caso de saída do Unity com erro, o script também mostra os diagnósticos encontrados no final do log, incluindo erros `CSxxxx`, sem exigir abrir o Bloco de Notas. Depois de uma correção publicada, basta executar novamente o mesmo preparador: ele consulta a revisão atual e baixa os arquivos corrigidos automaticamente.
+
 Nenhum Editor Unity ou licença estava disponível no ambiente que produziu esta entrega. O player do jogo não foi compilado aqui. O preparador foi compilado separadamente; seus testes de argumentos, arquivos e download não equivalem a testar o jogo.
 
 ## Uso pelo clone existente

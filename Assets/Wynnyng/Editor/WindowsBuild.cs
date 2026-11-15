@@ -26,8 +26,8 @@ namespace Wynnyng.Editor
             public string unityVersion;
             public string outputPath;
             public string scene;
-            public uint errors;
-            public uint warnings;
+            public int errors;
+            public int warnings;
             public ulong sizeBytes;
             public double durationSeconds;
             public string failure;

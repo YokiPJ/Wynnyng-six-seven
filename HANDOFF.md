@@ -8,6 +8,8 @@ Pedido posterior explícito: “Faça uma super correção no jogo, teste, aprim
 
 ## Revisão ampla e build Windows
 
+O log real do preparador na revisão 9ebb64a chegou ao compilador C# do Unity e abortou com CS0266 em `WindowsBuild.cs` linhas 108/109. `BuildSummary.totalErrors` e `.totalWarnings` são `int` no Unity 6000.0.62f1; o recibo estava incorretamente declarado `uint`. Ambos os campos foram corrigidos para `int`, sem cast. A licença foi resolvida/atualizada antes da compilação no log; não atribuir essa falha a licença, rede ou espera. O runner agora extrai erros do log para o console e tem regressão PowerShell baseada nesse diagnóstico. Executar o mesmo preparador novamente baixa o HEAD corrigido em outra revisão; não requer editar o clone ou baixar outro EXE. Preparação/testes/build do motor ainda precisam ser executados novamente para confirmar avanço.
+
 - `TagManager.asset` tinha itens de layer vazios como `  -`, rejeitados pelo Unity mostrado na screenshot. Agora usa `  - ""`, com exatamente 32 strings e Ground/Goal/Ball em 8/9/10.
 - O validador Python usa PyYAML 6.0.3, normaliza somente headers Unity e rejeita itens vazios sem valor, chaves duplicadas e schema de layers incorreto. Há 13 testes Python; isso não comprova o parser nativo do Unity.
 - Configs validam finitude de contatos, damping, clips, cores, vetores e cenários. Foram adicionados 12 casos EditMode para NaN/Infinity. Bootstrap exige transform identidade e possui um PlayMode de regressão para posição/rotação/escala incorretas.

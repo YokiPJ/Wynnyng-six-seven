@@ -61,16 +61,39 @@ function Find-UnityEditor([string]$RequestedPath, [string]$Version) {
     throw "Unity $Version nao foi encontrado. Instale essa versao pelo Unity Hub ou informe -EditorPath 'C:/caminho/Editor/Unity.exe'."
 }
 
+function Get-UnityFailureDetails([string]$LogPath) {
+    if (-not (Test-Path -LiteralPath $LogPath -PathType Leaf)) { return '' }
+    $lines = @(Get-Content -LiteralPath $LogPath -Encoding UTF8 -Tail 300)
+    $diagnostics = @($lines | Where-Object {
+        $_ -match 'error CS\d+|Exception|Scripts have compiler errors|Aborting batchmode|No valid.*license|executeMethod.*(not found|could not)|failed|failure'
+    } | Select-Object -Unique | Select-Object -First 12)
+    if ($diagnostics.Count -eq 0) { $diagnostics = @($lines | Select-Object -Last 12) }
+    return ($diagnostics -join [Environment]::NewLine)
+}
+
 function Invoke-UnityStep([string]$Name, [string[]]$ExtraArguments) {
     $logPath = Join-Path $resultsPath "$Name.log"
     $arguments = @('-batchmode', '-nographics', '-buildTarget', 'Win64',
         '-projectPath', $ProjectPath, '-logFile', $logPath) + $ExtraArguments
     $quoted = @($arguments | ForEach-Object { ConvertTo-NativeArgument $_ })
     Write-Host "[Wynnyng] $Name..."
-    $process = Start-Process -FilePath $script:resolvedEditor -ArgumentList ($quoted -join ' ') -Wait -PassThru
-    if ($process.ExitCode -ne 0) {
-        throw "Falha na etapa $Name (codigo $($process.ExitCode)). Consulte $logPath"
+    # Wait for this Editor process, not its tree: the licensing client can outlive the Editor.
+    $process = Start-Process -FilePath $script:resolvedEditor -ArgumentList ($quoted -join ' ') -PassThru
+    $elapsed = [Diagnostics.Stopwatch]::StartNew()
+    $nextProgress = 20
+    while (-not $process.WaitForExit(1000)) {
+        if ($elapsed.Elapsed.TotalSeconds -ge $nextProgress) {
+            Write-Host ("[Wynnyng] {0} em andamento ({1:0}s). Log: {2}" -f $Name, $elapsed.Elapsed.TotalSeconds, $logPath)
+            $nextProgress += 20
+        }
     }
+    $elapsed.Stop()
+    $process.Refresh()
+    if ($process.ExitCode -ne 0) {
+        $details = Get-UnityFailureDetails $logPath
+        throw "Falha na etapa $Name (codigo $($process.ExitCode)).`n$details`nLog completo: $logPath"
+    }
+    Write-Host ("[Wynnyng] {0} concluido em {1:0}s." -f $Name, $elapsed.Elapsed.TotalSeconds)
 }
 
 function Assert-TestResult([string]$Path, [string]$Name) {

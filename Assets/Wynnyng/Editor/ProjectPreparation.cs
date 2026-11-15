@@ -21,6 +21,21 @@ namespace Wynnyng.Editor
         private const string RendererPath = Root + "/Rendering/WynnyngRenderer.asset";
         private static bool waitingForTmp;
         private static bool exitBatchWhenReady;
+        private static bool startAfterPreparation;
+
+        [MenuItem("Wynnyng/Preparar e iniciar laboratorio")]
+        public static void PrepareAndPlay()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogError("[Wynnyng] Pare o Play antes de preparar o laboratorio.");
+                return;
+            }
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            startAfterPreparation = true;
+            try { Prepare(); }
+            catch { startAfterPreparation = false; throw; }
+        }
 
         [MenuItem("Wynnyng/Preparar Fases 0 e 1A")]
         public static void Prepare()
@@ -53,12 +68,14 @@ namespace Wynnyng.Editor
         }
         private static void OnTmpFailed(string packageName, string error)
         {
+            startAfterPreparation = false;
             StopWaiting();
             Debug.LogError("[Wynnyng] TMP import failed: " + error);
             if (exitBatchWhenReady) EditorApplication.Exit(1);
         }
         private static void OnTmpCancelled(string packageName)
         {
+            startAfterPreparation = false;
             StopWaiting();
             Debug.LogError("[Wynnyng] TMP resources were not imported. Run preparation again before Play.");
             if (exitBatchWhenReady) EditorApplication.Exit(1);
@@ -78,9 +95,16 @@ namespace Wynnyng.Editor
                 _ = TmpResources.RequireDefaultFont();
                 PrepareAssets();
                 if (exitBatchWhenReady) EditorApplication.Exit(0);
+                if (startAfterPreparation)
+                {
+                    startAfterPreparation = false;
+                    EditorSceneManager.OpenScene(ScenePath);
+                    EditorApplication.isPlaying = true;
+                }
             }
             catch (Exception exception)
             {
+                startAfterPreparation = false;
                 if (!exitBatchWhenReady) throw;
                 Debug.LogException(exception);
                 EditorApplication.Exit(1);
@@ -94,6 +118,7 @@ namespace Wynnyng.Editor
             PresentationConfig presentation = EnsureConfig<PresentationConfig>("Presentation");
             simulation.ValidateOrThrow(); ball.ValidateOrThrow(); pitch.ValidateOrThrow(ball.Radius); presentation.ValidateOrThrow();
             PrepareRendering();
+            RenderingResources.RequireConfigured();
             Time.fixedDeltaTime = 1f / simulation.FixedFrequency;
             Time.maximumDeltaTime = simulation.MaximumFrameDelta;
             Physics.gravity = simulation.Gravity;
@@ -189,7 +214,8 @@ namespace Wynnyng.Editor
                 return;
             }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-            if (!TmpResources.TryGetDefaultFont(out _) || AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
+            if (!TmpResources.TryGetDefaultFont(out _) || !RenderingResources.IsConfigured ||
+                AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
             {
                 Debug.Log("[Wynnyng] Preparando recursos. Aguarde Ready e escolha Abrir laboratorio novamente.");
                 Prepare();

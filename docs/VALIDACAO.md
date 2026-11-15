@@ -9,8 +9,8 @@ Ambiente Linux, .NET SDK **8.0.428**, sem Unity Editor instalado/licenciado. Ins
 | Compilação do núcleo | **Passou**, C# 9, .NET Standard 2.1, warnings tratados como erros |
 | Testes do núcleo em .NET 8 | **42 passaram, 0 falhas, 0 ignorados** |
 | Alocação do núcleo após aquecimento | **0 bytes gerenciados** em 60.000 passos, incluindo física pura, sessão, RNG e publicação de eventos |
-| Sintaxe dos scripts de Assets | **26 arquivos, 0 erros** com Roslyn/C# 9; não verifica tipos do motor |
-| Estrutura do projeto | **Passou**: 57 GUIDs únicos de assets/pastas, 8 assemblies sem ciclos, referências e IDs das ações válidos |
+| Sintaxe dos scripts de Assets | **28 arquivos, 0 erros** com Roslyn/C# 9; não verifica tipos do motor |
+| Estrutura do projeto | **Passou**: 59 GUIDs únicos de assets/pastas, 8 assemblies sem ciclos, referências e IDs das ações válidos |
 | APIs antigas / código incompleto | Sem usos de Input legado, `FindObjectOfType`, `FindObjectsOfType`, LINQ ou marcadores de implementação pendente nos scripts |
 | Espaços/diff | `git diff --check` sem problemas; verificação repetida após adicionar os arquivos ao índice |
 
@@ -46,14 +46,25 @@ O log enviado confirmou: settings/fontes TMP ausentes; exceção no getter está
 
 Os novos testes de Unity foram escritos e verificados sintaticamente, mas **não foram executados neste ambiente**. A solução imediata para a cópia do usuário é parar o Play, importar TMP Essential Resources, aguardar e preparar novamente. A renderização e o restante do aceite precisam de nova execução no Editor.
 
+## HUD ativo com campo invisível
+
+A screenshot seguinte mostra o HUD/clock ativos e apenas o fundo da câmera. A árvore de pastas não mostra Rendering, criada pela preparação, o que sugere URP ainda não configurado. Essa hipótese não foi confirmada por leitura das configurações Graphics/Quality no PC do usuário.
+
+- O startup agora exige um UniversalRenderPipelineAsset efetivo antes de criar a apresentação. Considera overrides de qualidade e orienta executar a preparação se o pipeline estiver ausente/incompatível.
+- A câmera recebe configuração explícita de perspectiva, culling, Base e renderer. Cinemachine é inicializado antes de ativar o Brain usando APIs públicas de 3.1.3.
+- O menu Preparar e iniciar laboratorio encadeia importação/preparação, abertura da cena e Play depois da confirmação de recursos.
+- Dois testes EditMode verificam pipeline ausente e configuração preparada. Um PlayMode gráfico compara a imagem do gramado ao fundo em quatro posições, para não aceitar apenas o HUD como prova de renderização 3D. Ele é ignorado em batch/nographics e exige Game visível.
+
+**Os testes do motor e de pixels continuam não executados aqui.** A verificação de sintaxe/estrutura e a CI do núcleo não comprovam que o campo foi renderizado.
+
 ## Preparado, sem execução neste ambiente
 
 | Aceite | Como verificar |
 |---|---|
 | Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |
 | Resolução efetiva dos pacotes | Package Manager; primeiro import gera `packages-lock.json` |
-| EditMode | Test Runner: 47 casos esperados, incluindo configurações/entrada e os 3 casos TMP |
-| PlayMode | Test Runner: 12 testes de integração, incluindo HUD e apresentação, descritos no README |
+| EditMode | Test Runner: 49 casos esperados, incluindo configurações, entrada, TMP e configuração URP |
+| PlayMode | Test Runner: 13 testes, incluindo um teste gráfico ignorado em batch/nographics |
 | HLSL, materiais e layout da interface | Inspeção em Play no Editor com renderização habilitada |
 | Hotplug, remapeamento e dois controles físicos | Checklist manual do README |
 | 60 FPS / GTX 1060 / GC da integração | Development Build Windows e Profiler após aquecimento |

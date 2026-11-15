@@ -84,6 +84,7 @@ namespace Wynnyng.Runtime
             if (FindObjectsByType<MatchBootstrap>(FindObjectsSortMode.None).Length != 1)
                 throw new InvalidOperationException("Open one laboratory scene at a time.");
             simulation.ValidateOrThrow(); ball.ValidateOrThrow(); pitch.ValidateOrThrow(ball.Radius); presentation.ValidateOrThrow();
+            if (withPresentation) RenderingResources.RequireConfigured();
             // Validate UI dependencies before changing global settings or creating any runtime objects.
             TMP_FontAsset hudFont = withPresentation && withInput ? TmpResources.RequireDefaultFont() : null;
             log = new UnityGameLog(simulation.EnableLogging);

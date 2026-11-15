@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.TestTools;
 using Wynnyng.Configuration;
 using Wynnyng.Core;
@@ -191,6 +192,44 @@ namespace Wynnyng.Tests.PlayMode
             Assert.That(target.z, Is.GreaterThan(camera.nearClipPlane));
             Assert.That(target.x, Is.EqualTo(0.5f).Within(0.01f));
             Assert.That(target.y, Is.EqualTo(0.5f).Within(0.01f));
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator GraphicalPlayerRendersGrassInsteadOfOnlyTheClearBackground()
+        {
+            if (Application.isBatchMode || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
+                Assert.Ignore("Pixel acceptance requires the graphical Editor with the Game view visible.");
+            Object.Destroy(root);
+            yield return null;
+            root = new GameObject("Pixel Acceptance Fixture");
+            bootstrap = root.AddComponent<MatchBootstrap>();
+            bootstrap.Configure(simulation, pitch, ball, presentation, true, true);
+            bootstrap.Initialize();
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            Texture2D frame = ScreenCapture.CaptureScreenshotAsTexture();
+            Assert.That(frame, Is.Not.Null);
+            try
+            {
+                Camera camera = root.GetComponentInChildren<Camera>();
+                Color background = frame.GetPixelBilinear(0.95f, 0.95f);
+                // Sample four grass locations away from the ball, marker, pitch lines and HUD panels.
+                for (int x = -1; x <= 1; x += 2)
+                for (int z = -1; z <= 1; z += 2)
+                {
+                    Vector3 sample = camera.WorldToViewportPoint(new Vector3(
+                        x * pitch.Width * 0.25f, pitch.LineElevation, z * pitch.Length * 0.25f));
+                    Assert.That(sample.x, Is.InRange(0f, 1f));
+                    Assert.That(sample.y, Is.InRange(0f, 1f));
+                    Assert.That(sample.z, Is.GreaterThan(camera.nearClipPlane));
+                    Color grass = frame.GetPixelBilinear(sample.x, sample.y);
+                    float difference = Mathf.Max(Mathf.Abs(grass.r - background.r),
+                        Mathf.Abs(grass.g - background.g), Mathf.Abs(grass.b - background.b));
+                    Assert.That(difference, Is.GreaterThan(0.05f), "Pitch sample still matches the camera clear background.");
+                }
+            }
+            finally { Object.Destroy(frame); }
             LogAssert.NoUnexpectedReceived();
         }
 

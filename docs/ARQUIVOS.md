@@ -52,6 +52,8 @@ Assets/Wynnyng/Presentation/LaboratoryHud.cs
 Assets/Wynnyng/Presentation/LaboratoryHud.cs.meta
 Assets/Wynnyng/Presentation/OverviewCameraFactory.cs
 Assets/Wynnyng/Presentation/OverviewCameraFactory.cs.meta
+Assets/Wynnyng/Presentation/RenderingResources.cs
+Assets/Wynnyng/Presentation/RenderingResources.cs.meta
 Assets/Wynnyng/Presentation/PitchFactory.cs
 Assets/Wynnyng/Presentation/PitchFactory.cs.meta
 Assets/Wynnyng/Presentation/RuntimeAssets.cs
@@ -96,6 +98,8 @@ Assets/Wynnyng/Tests/EditMode/ConfigurationTests.cs
 Assets/Wynnyng/Tests/EditMode/ConfigurationTests.cs.meta
 Assets/Wynnyng/Tests/EditMode/CoreTests.cs
 Assets/Wynnyng/Tests/EditMode/CoreTests.cs.meta
+Assets/Wynnyng/Tests/EditMode/RenderingResourcesTests.cs
+Assets/Wynnyng/Tests/EditMode/RenderingResourcesTests.cs.meta
 Assets/Wynnyng/Tests/EditMode/TmpResourcesTests.cs
 Assets/Wynnyng/Tests/EditMode/TmpResourcesTests.cs.meta
 Assets/Wynnyng/Tests/EditMode/Wynnyng.Tests.EditMode.asmdef

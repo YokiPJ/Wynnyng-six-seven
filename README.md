@@ -70,6 +70,8 @@ Não instalar o antigo pacote independente `com.unity.textmeshpro`. O Editor ger
 
 O comando de preparação preserva configurações/cena que já existem e preserva outras cenas na lista de build. Ele aplica o URP criado a todos os níveis de qualidade. Execute-o novamente se apagar os assets gerados em `Assets/Wynnyng/Rendering/`.
 
+Na versão corrigida, **Wynnyng → Preparar e iniciar laboratorio** faz a preparação, aguarda recursos essenciais quando necessário, abre `Phase01A` e entra em Play. Use o comando com o Play parado.
+
 O campo nasce ao entrar em Play. É esperado que a Scene esteja quase vazia fora do Play. Mantenha `Wynnyng Bootstrap` na origem, sem rotação e com escala 1.
 
 Se você baixou a primeira entrega e apareceu **Package Manager Error** dizendo que `com.unity.modules.screen-capture` não existe:
@@ -88,6 +90,15 @@ Se a cena do laboratório abrir preta e a Console mostrar `TMP_Settings.get_defa
 4. Na Console, clique em **Clear** para remover as mensagens antigas. Entre em Play novamente na cena `Phase01A`.
 
 O código corrigido verifica os settings/fontes antes de criar o mundo e só ativa o HUD depois de construir todos os seus componentes. Uma falha de inicialização limpa o mundo parcial e restaura os parâmetros globais. O comando de preparação não informa Ready enquanto a fonte padrão não estiver carregada. Atualizar a branch traz essas proteções; importar TMP fora do Play resolve os recursos ausentes também na cópia anterior.
+
+Se os textos e o contador aparecem, mas o campo continua escuro:
+
+1. Pare o Play.
+2. Execute **Wynnyng → Preparar Fases 0 e 1A** e aguarde **Ready**.
+3. Confira se apareceu `Assets/Wynnyng/Rendering/`, com `WynnyngURP` e `WynnyngRenderer`.
+4. Abra o laboratório e entre em Play novamente. Na versão atualizada também é possível usar **Preparar e iniciar laboratorio**.
+
+Os shaders do campo são de URP. O HUD aparecer sozinho não comprova que o pipeline 3D foi configurado. A nova verificação considera tanto Graphics quanto o override da qualidade atual e interrompe o startup com orientação explícita se nenhum URP estiver selecionado. A câmera é configurada como Base, com renderer, culling e projeção definidos, e seu estado Cinemachine é preparado antes de ativar o Brain.
 
 ## 4. Controles preparados para a Fase 1B
 
@@ -143,7 +154,9 @@ Cobertura preparada:
 - Infraestrutura: seed reproduzível, seed zero definida, relógio, capacidade/inscrição/remoção de eventos e contagem única por bola em jogo.
 - EditMode do Unity: SOs, recursos, ações necessárias e isolamento/serialização dos remapeamentos.
 - EditMode de TMP: ausência dos settings sem acessar o getter inseguro, ausência da fonte padrão e fonte carregada após preparação.
+- EditMode de renderização: pipeline ausente e configuração URP efetiva após preparação.
 - PlayMode do Unity: bootstrap/60 Hz, dimensões e componentes, gol nos dois sentidos, bola acima da trave, lateral, colisão na trave, quique, curva e reset; HUD rejeitado sem erros por frame, inicialização com apresentação completa e nova tentativa após falha.
+- PlayMode gráfico: lê quatro pontos do gramado na imagem e os compara ao fundo. Execute com a aba **Game visível**; esse caso é ignorado em batch/nographics e não é validado pela CI headless.
 
 Checklist manual — marque depois de executar no seu PC:
 
@@ -152,6 +165,7 @@ Checklist manual — marque depois de executar no seu PC:
 - [ ] Campo 105 × 68 m com perímetro, meio, círculo central, áreas, marcas de pênalti, arcos e cantos.
 - [ ] Dois gols com abertura livre 7,32 × 2,44 m; traves colidem; redes seguram a bola.
 - [ ] Campo, bola, traves e textos aparecem com as cores corretas, sem materiais rosa.
+- [ ] URP selecionado em Graphics e no nível de qualidade atual; a preparação cria os dois assets na pasta Rendering.
 - [ ] `Gol no fundo +Z` e `Gol no fundo -Z` somam exatamente um evento cada.
 - [ ] `Bola acima do travessao` conta fora, sem contar gol.
 - [ ] `Saida pela lateral` cruza a linha sem bater numa parede invisível.
@@ -163,6 +177,7 @@ Checklist manual — marque depois de executar no seu PC:
 - [ ] Dois gamepads possuem remapeamentos independentes; desconexão/reconexão não gera exceções.
 - [ ] EditMode e PlayMode passam no Test Runner.
 - [ ] Com recursos TMP ausentes, a tentativa de Play relata uma falha de preparação, sem gerar `NullReferenceException` a cada frame; depois de importar os recursos fora do Play, a cena inicia normalmente.
+- [ ] Com URP ausente, o startup orienta preparar o projeto; depois da preparação, o gramado aparece também na imagem capturada pelo teste gráfico.
 - [ ] Num Development Build Windows, medir CPU/GPU/GC pelo Profiler, após aquecimento, com captura da máquina e resolução. Meta: 60 FPS; validação na GTX 1060 ainda pendente.
 
 ## 6. Tuning e sensação

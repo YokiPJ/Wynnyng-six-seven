@@ -1,0 +1,26 @@
+name: Core CSharp tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pure-core:
+    runs-on: ubuntu-latest
+    env:
+      VSTEST_ARTIFACTS_DIRECTORY: ${{ github.workspace }}/work/results
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Validate project files
+        run: python3 tools/validate_project.py
+      - name: Compile .NET Standard 2.1 and run shared tests
+        run: dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release --logger trx --results-directory work/results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-test-results
+          path: work/results/*.trx

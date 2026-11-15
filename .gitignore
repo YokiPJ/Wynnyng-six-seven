@@ -1,0 +1,31 @@
+# Unity generated state
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/[Bb]uild/
+/[Bb]uilds/
+/.vs/
+/.idea/
+*.csproj.user
+*.sln
+*.slnx
+/Assembly-CSharp*.csproj
+/Wynnyng.*.csproj
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.unitypackage
+.DS_Store
+Thumbs.db
+# Intermediate tooling and results
+/work/
+**/bin/
+**/obj/
+TestResults/
+*.log

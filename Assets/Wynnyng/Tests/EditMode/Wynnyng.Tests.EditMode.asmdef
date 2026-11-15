@@ -1,0 +1,25 @@
+{
+  "name": "Wynnyng.Tests.EditMode",
+  "rootNamespace": "Wynnyng.Tests.EditMode",
+  "references": [
+    "Wynnyng.Core",
+    "Wynnyng.Configuration",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

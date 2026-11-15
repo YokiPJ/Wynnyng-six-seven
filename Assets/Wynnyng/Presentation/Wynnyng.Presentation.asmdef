@@ -1,0 +1,22 @@
+{
+  "name": "Wynnyng.Presentation",
+  "rootNamespace": "Wynnyng.Presentation",
+  "references": [
+    "Wynnyng.Core",
+    "Wynnyng.Configuration",
+    "Wynnyng.Input",
+    "Unity.InputSystem",
+    "Unity.Cinemachine",
+    "Unity.TextMeshPro",
+    "Unity.ugui"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

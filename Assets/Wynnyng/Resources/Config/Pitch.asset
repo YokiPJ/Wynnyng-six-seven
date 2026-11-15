@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 779ad48c250958aabffd4c00c056c387, type: 3}
+  m_Name: Pitch
+  m_EditorClassIdentifier:
+  Length: 105
+  Width: 68
+  GoalWidth: 7.32
+  GoalHeight: 2.44
+  GoalDepth: 2.5
+  PostRadius: 0.06
+  BoundaryContactTolerance: 0.002
+  SurfaceThickness: 0.25
+  Runoff: 8
+  LineWidth: 0.12
+  LineElevation: 0.012
+  CentreRadius: 9.15
+  PenaltyAreaDepth: 16.5
+  PenaltyAreaWidth: 40.32
+  GoalAreaDepth: 5.5
+  GoalAreaWidth: 18.32
+  PenaltySpotDistance: 11
+  SpotRadius: 0.11
+  CornerRadius: 1
+  CircleSegments: 96
+  GrassStripes: 20
+  NetSpacing: 0.25
+  NetColliderThickness: 0.04
+  NetRestitution: 0.08
+  NetFriction: 0.8
+  SurfaceFriction: 0.18
+  GrassLight: {r: 0.13, g: 0.36, b: 0.23, a: 1}
+  GrassDark: {r: 0.1, g: 0.29, b: 0.18, a: 1}
+  RunoffColor: {r: 0.07, g: 0.19, b: 0.13, a: 1}
+  MarkingColor: {r: 0.9, g: 0.95, b: 0.88, a: 1}
+  NetColor: {r: 0.65, g: 0.75, b: 0.68, a: 1}

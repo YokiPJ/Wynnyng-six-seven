@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 28
+  productGUID: 56085706bc135ed4885b836d956c15b7
+  companyName: YokiPJ
+  productName: Wynnyng
+  defaultScreenWidth: 1920
+  defaultScreenHeight: 1080
+  defaultIsNativeResolution: 1
+  runInBackground: 1
+  resizableWindow: 1
+  fullscreenMode: 3
+  visibleInBackground: 1
+  allowFullscreenSwitch: 1
+  m_ActiveColorSpace: 1
+  activeInputHandler: 1
+  scriptingRuntimeVersion: 1
+  apiCompatibilityLevelPerPlatform: {}
+  scriptingBackend:
+    Standalone: 0
+  applicationIdentifier:
+    Standalone: com.yokipj.wynnyng
+  bundleVersion: 0.1.0
+  usePlayerLog: 1

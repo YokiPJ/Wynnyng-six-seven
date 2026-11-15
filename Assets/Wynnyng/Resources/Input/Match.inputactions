@@ -1,0 +1,492 @@
+{
+  "name": "Match",
+  "maps": [
+    {
+      "name": "Gameplay",
+      "id": "5c8c2038-7571-59e9-8822-357b01533c81",
+      "actions": [
+        {
+          "name": "Move",
+          "type": "Value",
+          "id": "9c418f8f-7c06-5d7c-a596-6bd9c6de1798",
+          "expectedControlType": "Vector2",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": true
+        },
+        {
+          "name": "Shoot",
+          "type": "Button",
+          "id": "56e91f83-9633-5ac9-940e-699b8b0cc52a",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Pass",
+          "type": "Button",
+          "id": "5b1fd9f3-aaf9-5e0c-8807-02377945eff6",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Through",
+          "type": "Button",
+          "id": "3c8fa510-19e0-5c89-941d-62f539a84a23",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Lob",
+          "type": "Button",
+          "id": "fe1ca17f-cb3c-53ca-a77e-3b1fc3e4a8a9",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Sprint",
+          "type": "Value",
+          "id": "2b61de52-d06d-530d-becd-cf8d91dae8bf",
+          "expectedControlType": "Axis",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": true
+        },
+        {
+          "name": "Switch",
+          "type": "Button",
+          "id": "f4b4bba0-ff32-507f-9fdb-f486a393e35b",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Pause",
+          "type": "Button",
+          "id": "900015b8-5464-5e6d-b47e-489ed3262fd8",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        }
+      ],
+      "bindings": [
+        {
+          "name": "",
+          "id": "c6a5286c-4bf7-52ea-a04e-10a84fbe496d",
+          "path": "<Gamepad>/leftStick",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Move",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "WASD",
+          "id": "1940f14c-e15d-5a60-8b29-2af4e754f293",
+          "path": "2DVector",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Move",
+          "isComposite": true,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "up",
+          "id": "2616e9c8-7da6-514f-8271-0c3e92711edc",
+          "path": "<Keyboard>/w",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Move",
+          "isComposite": false,
+          "isPartOfComposite": true
+        },
+        {
+          "name": "down",
+          "id": "aec38e0c-2b1d-5c34-a8de-78ad6f9674c1",
+          "path": "<Keyboard>/s",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Move",
+          "isComposite": false,
+          "isPartOfComposite": true
+        },
+        {
+          "name": "left",
+          "id": "2e4227e5-990e-5875-95e5-b73decb20ae6",
+          "path": "<Keyboard>/a",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Move",
+          "isComposite": false,
+          "isPartOfComposite": true
+        },
+        {
+          "name": "right",
+          "id": "653f82f8-623a-5677-9372-5905ada7d17c",
+          "path": "<Keyboard>/d",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Move",
+          "isComposite": false,
+          "isPartOfComposite": true
+        },
+        {
+          "name": "",
+          "id": "caa1e08d-c707-5cda-95b9-7414889b861d",
+          "path": "<Gamepad>/buttonSouth",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Shoot",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "199df1fe-f999-5bbb-b53a-b67bafd27c42",
+          "path": "<Keyboard>/j",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Shoot",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "16af40c8-5f78-5b99-83b5-85f14f97d25b",
+          "path": "<Gamepad>/buttonWest",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Pass",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "0f983a60-5570-5151-ba37-19973aca5f23",
+          "path": "<Keyboard>/k",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Pass",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "64320ba6-a069-5e9e-a059-9a1e25c461a5",
+          "path": "<Gamepad>/buttonNorth",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Through",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "01534a47-6065-5ae5-a8fe-636fca329a6f",
+          "path": "<Keyboard>/i",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Through",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "bcf6db1b-3bf3-51e8-8851-efdd312a85f1",
+          "path": "<Gamepad>/buttonEast",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Lob",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "808848a2-acab-54f7-a1ad-ba0e92c4d2fa",
+          "path": "<Keyboard>/l",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Lob",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "c383f903-271c-5ab5-aff2-a1d3cd4d023a",
+          "path": "<Gamepad>/rightTrigger",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Sprint",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "f702f204-1fc9-5180-881d-94980bf016a5",
+          "path": "<Keyboard>/leftShift",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Sprint",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "5eb10375-6377-5c0a-b3cb-cbe7f9ff1b7c",
+          "path": "<Gamepad>/leftShoulder",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Switch",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "201dec0b-9c23-57c5-9030-849f1e3e232c",
+          "path": "<Keyboard>/tab",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Switch",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "7f98f6aa-1c4e-577b-92f3-9063d532dfe3",
+          "path": "<Gamepad>/start",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Pause",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "0c83e98a-c4a1-5e5f-a037-171b97eab9ee",
+          "path": "<Keyboard>/escape",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Pause",
+          "isComposite": false,
+          "isPartOfComposite": false
+        }
+      ]
+    },
+    {
+      "name": "Laboratory",
+      "id": "f98e3054-3cd7-5ca0-a22f-b8d8f79b2933",
+      "actions": [
+        {
+          "name": "Previous",
+          "type": "Button",
+          "id": "2ec4c54c-05f8-563b-940e-2eeb291982c1",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Next",
+          "type": "Button",
+          "id": "81589f3a-a473-5b90-b748-7aa06df9eb2a",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Launch",
+          "type": "Button",
+          "id": "d631b932-711f-50a3-8f0e-dbb17afa42f1",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Reset",
+          "type": "Button",
+          "id": "dc52034a-ba30-5f56-a2fb-4f61091a018f",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Bindings",
+          "type": "Button",
+          "id": "ee6637ba-16b2-505c-bf24-40de0d8a28c9",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        }
+      ],
+      "bindings": [
+        {
+          "name": "",
+          "id": "3c78ac1d-79bd-54c8-8370-3ab93ec4d52c",
+          "path": "<Gamepad>/dpad/left",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Previous",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "c671c4a8-e1d9-5f98-8433-355e20cc8613",
+          "path": "<Keyboard>/leftArrow",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Previous",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "776a3ce4-6f3f-58e5-ab3f-4f1dcc5ee0e2",
+          "path": "<Gamepad>/dpad/right",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Next",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "43d3d840-b7f2-52d0-b62d-6e6dc5bddd09",
+          "path": "<Keyboard>/rightArrow",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Next",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "49a5d84d-bc26-5130-9113-42b1d580f941",
+          "path": "<Gamepad>/rightShoulder",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Launch",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "60af6fba-2ad7-5d80-a8ce-e6b0397e2ed1",
+          "path": "<Keyboard>/enter",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Launch",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "9ee10359-5bc3-5acd-b54f-25042b8c9cbd",
+          "path": "<Gamepad>/select",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Reset",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "f663b5c7-c4d5-5949-a9c2-902b193c7102",
+          "path": "<Keyboard>/r",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Reset",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "01d1cbe5-4f9d-5f91-bead-e3ccff60b0d3",
+          "path": "<Gamepad>/start",
+          "interactions": "",
+          "processors": "",
+          "groups": "Gamepad",
+          "action": "Bindings",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "b46e4701-8399-5e8c-9ff4-3e70e647ce91",
+          "path": "<Keyboard>/f1",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard",
+          "action": "Bindings",
+          "isComposite": false,
+          "isPartOfComposite": false
+        }
+      ]
+    }
+  ],
+  "controlSchemes": [
+    {
+      "name": "Gamepad",
+      "bindingGroup": "Gamepad",
+      "devices": [
+        {
+          "devicePath": "<Gamepad>",
+          "isOptional": false,
+          "isOR": false
+        }
+      ]
+    },
+    {
+      "name": "Keyboard",
+      "bindingGroup": "Keyboard",
+      "devices": [
+        {
+          "devicePath": "<Keyboard>",
+          "isOptional": false,
+          "isOR": false
+        }
+      ]
+    }
+  ]
+}

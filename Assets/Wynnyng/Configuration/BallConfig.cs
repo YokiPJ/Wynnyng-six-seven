@@ -30,10 +30,15 @@ namespace Wynnyng.Configuration
         public void ValidateOrThrow()
         {
             _ = Parameters;
-            if (!float.IsFinite(Mass + Radius + AirDensity + DragCoefficient + MagnusCoefficient + RollingFriction) ||
-                Restitution < 0f || Restitution > 1f || SurfaceFriction < 0f || SurfaceFriction > 1f ||
-                AngularDamping < 0f || MaxAngularSpeed <= 0f || ContactOffset <= 0f || ContactOffset >= Radius ||
-                GroundProbeDistance <= 0f || GroundedMaxVerticalSpeed < 0f || ResetClearance < 0f || PanelFrequency < 1f)
+            if (!ConfigValidation.Positive(Mass) || !ConfigValidation.Positive(Radius) ||
+                !ConfigValidation.NonNegative(AirDensity) || !ConfigValidation.NonNegative(DragCoefficient) ||
+                !ConfigValidation.NonNegative(MagnusCoefficient) || !ConfigValidation.NonNegative(RollingFriction) ||
+                !ConfigValidation.UnitRange(Restitution) || !ConfigValidation.UnitRange(SurfaceFriction) ||
+                !ConfigValidation.NonNegative(AngularDamping) || !ConfigValidation.Positive(MaxAngularSpeed) ||
+                !ConfigValidation.Positive(ContactOffset) || ContactOffset >= Radius ||
+                !ConfigValidation.Positive(GroundProbeDistance) || !ConfigValidation.NonNegative(GroundedMaxVerticalSpeed) ||
+                !ConfigValidation.NonNegative(ResetClearance) || !ConfigValidation.Finite(PanelFrequency) || PanelFrequency < 1f ||
+                !ConfigValidation.Finite(BaseColor) || !ConfigValidation.Finite(PanelColor))
                 throw new InvalidOperationException("BallConfig: invalid physical parameters.");
         }
     }

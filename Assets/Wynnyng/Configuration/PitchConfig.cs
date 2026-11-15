@@ -46,14 +46,24 @@ namespace Wynnyng.Configuration
         public void ValidateOrThrow(float ballRadius)
         {
             _ = Geometry(ballRadius);
-            if (!float.IsFinite(Length + Width + GoalWidth + GoalHeight + GoalDepth + NetSpacing) ||
-                GoalDepth <= 0f || PostRadius <= 0f || SurfaceThickness <= 0f || Runoff < GoalDepth ||
-                LineWidth <= 0f || LineElevation <= 0f || CircleSegments < 8 || GrassStripes < 2 ||
-                NetSpacing <= 0f || NetColliderThickness <= 0f || PenaltyAreaWidth >= Width ||
-                GoalAreaWidth >= PenaltyAreaWidth || PenaltyAreaDepth >= Length * 0.5f ||
-                PenaltyAreaDepth <= PenaltySpotDistance || PenaltySpotDistance <= 0f ||
-                CentreRadius <= PenaltyAreaDepth - PenaltySpotDistance || GoalAreaDepth <= 0f ||
-                GoalAreaDepth >= PenaltyAreaDepth || CornerRadius <= 0f || SpotRadius <= 0f)
+            if (!ConfigValidation.Positive(Length) || !ConfigValidation.Positive(Width) ||
+                !ConfigValidation.Positive(GoalWidth) || !ConfigValidation.Positive(GoalHeight) ||
+                !ConfigValidation.Positive(GoalDepth) || !ConfigValidation.Positive(PostRadius) ||
+                !ConfigValidation.NonNegative(BoundaryContactTolerance) ||
+                !ConfigValidation.Positive(SurfaceThickness) || !ConfigValidation.Positive(Runoff) || Runoff < GoalDepth ||
+                !ConfigValidation.Positive(LineWidth) || !ConfigValidation.Positive(LineElevation) ||
+                !ConfigValidation.Positive(CentreRadius) || !ConfigValidation.Positive(PenaltyAreaDepth) ||
+                !ConfigValidation.Positive(PenaltyAreaWidth) || !ConfigValidation.Positive(GoalAreaDepth) ||
+                !ConfigValidation.Positive(GoalAreaWidth) || !ConfigValidation.Positive(PenaltySpotDistance) ||
+                !ConfigValidation.Positive(CornerRadius) || !ConfigValidation.Positive(SpotRadius) ||
+                CircleSegments < 8 || GrassStripes < 2 || !ConfigValidation.Positive(NetSpacing) ||
+                !ConfigValidation.Positive(NetColliderThickness) || !ConfigValidation.UnitRange(NetRestitution) ||
+                !ConfigValidation.UnitRange(NetFriction) || !ConfigValidation.UnitRange(SurfaceFriction) ||
+                PenaltyAreaWidth >= Width || GoalAreaWidth >= PenaltyAreaWidth || PenaltyAreaDepth >= Length * 0.5f ||
+                PenaltyAreaDepth <= PenaltySpotDistance || CentreRadius <= PenaltyAreaDepth - PenaltySpotDistance ||
+                GoalAreaDepth >= PenaltyAreaDepth || !ConfigValidation.Finite(GrassLight) ||
+                !ConfigValidation.Finite(GrassDark) || !ConfigValidation.Finite(RunoffColor) ||
+                !ConfigValidation.Finite(MarkingColor) || !ConfigValidation.Finite(NetColor))
                 throw new InvalidOperationException("PitchConfig: invalid geometry, markings or net dimensions.");
         }
     }

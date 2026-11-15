@@ -7,6 +7,57 @@ namespace Wynnyng.Tests.EditMode
 {
     public sealed class ConfigurationTests
     {
+        [TestCase(float.NaN)] [TestCase(float.PositiveInfinity)] [TestCase(float.NegativeInfinity)]
+        public void BallRejectsNonFiniteRestitutionAndDamping(float value)
+        {
+            var config = ScriptableObject.CreateInstance<BallConfig>();
+            try
+            {
+                config.Restitution = value;
+                Assert.Throws<System.InvalidOperationException>(config.ValidateOrThrow);
+                config.Restitution = 0.65f;
+                config.AngularDamping = value;
+                Assert.Throws<System.InvalidOperationException>(config.ValidateOrThrow);
+            }
+            finally { Object.DestroyImmediate(config); }
+        }
+        [TestCase(float.NaN)] [TestCase(float.PositiveInfinity)] [TestCase(float.NegativeInfinity)]
+        public void PresentationRejectsNonFiniteClippingAndScenarioVelocity(float value)
+        {
+            var config = ScriptableObject.CreateInstance<PresentationConfig>();
+            try
+            {
+                float originalClip = config.NearClip;
+                config.NearClip = value;
+                Assert.Throws<System.InvalidOperationException>(config.ValidateOrThrow);
+                config.NearClip = originalClip;
+                config.Scenarios[0].Velocity = new Vector3(value, 0f, 0f);
+                Assert.Throws<System.InvalidOperationException>(config.ValidateOrThrow);
+            }
+            finally { Object.DestroyImmediate(config); }
+        }
+        [TestCase(float.NaN)] [TestCase(float.PositiveInfinity)] [TestCase(float.NegativeInfinity)]
+        public void PitchRejectsNonFiniteContactFriction(float value)
+        {
+            var config = ScriptableObject.CreateInstance<PitchConfig>();
+            try
+            {
+                config.NetFriction = value;
+                Assert.Throws<System.InvalidOperationException>(() => config.ValidateOrThrow(0.11f));
+            }
+            finally { Object.DestroyImmediate(config); }
+        }
+        [TestCase(float.NaN)] [TestCase(float.PositiveInfinity)] [TestCase(float.NegativeInfinity)]
+        public void SimulationRejectsNonFiniteBounceThreshold(float value)
+        {
+            var config = ScriptableObject.CreateInstance<SimulationConfig>();
+            try
+            {
+                config.BounceThreshold = value;
+                Assert.Throws<System.InvalidOperationException>(config.ValidateOrThrow);
+            }
+            finally { Object.DestroyImmediate(config); }
+        }
         [Test]
         public void DefaultScriptableObjectsAreValid()
         {

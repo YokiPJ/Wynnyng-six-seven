@@ -22,6 +22,30 @@ namespace Wynnyng.Editor
         private static bool waitingForTmp;
         private static bool exitBatchWhenReady;
         private static bool startAfterPreparation;
+        private static Action preparationReady;
+        private static Action<Exception> preparationFailure;
+
+        public static void PrepareForBuild(Action onReady, Action<Exception> onFailure)
+        {
+            if (onReady == null) throw new ArgumentNullException(nameof(onReady));
+            if (onFailure == null) throw new ArgumentNullException(nameof(onFailure));
+            if (waitingForTmp || preparationReady != null)
+            {
+                onFailure(new InvalidOperationException("A preparacao de recursos ja esta em andamento."));
+                return;
+            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                onFailure(new InvalidOperationException("Pare o Play antes de gerar o executavel."));
+                return;
+            }
+            exitBatchWhenReady = false;
+            startAfterPreparation = false;
+            preparationReady = onReady;
+            preparationFailure = onFailure;
+            try { Prepare(); }
+            catch (Exception exception) { FailPreparation(exception); }
+        }
 
         [MenuItem("Wynnyng/Preparar e iniciar laboratorio")]
         public static void PrepareAndPlay()
@@ -68,17 +92,11 @@ namespace Wynnyng.Editor
         }
         private static void OnTmpFailed(string packageName, string error)
         {
-            startAfterPreparation = false;
-            StopWaiting();
-            Debug.LogError("[Wynnyng] TMP import failed: " + error);
-            if (exitBatchWhenReady) EditorApplication.Exit(1);
+            FailPreparation(new InvalidOperationException("TMP import failed: " + error));
         }
         private static void OnTmpCancelled(string packageName)
         {
-            startAfterPreparation = false;
-            StopWaiting();
-            Debug.LogError("[Wynnyng] TMP resources were not imported. Run preparation again before Play.");
-            if (exitBatchWhenReady) EditorApplication.Exit(1);
+            FailPreparation(new InvalidOperationException("TMP import cancelled. Run preparation again before Play."));
         }
         private static void StopWaiting()
         {
@@ -94,6 +112,16 @@ namespace Wynnyng.Editor
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 _ = TmpResources.RequireDefaultFont();
                 PrepareAssets();
+                if (preparationReady != null)
+                {
+                    Action ready = preparationReady;
+                    Action<Exception> failed = preparationFailure;
+                    preparationReady = null;
+                    preparationFailure = null;
+                    try { ready(); }
+                    catch (Exception exception) { failed(exception); }
+                    return;
+                }
                 if (exitBatchWhenReady) EditorApplication.Exit(0);
                 if (startAfterPreparation)
                 {
@@ -104,11 +132,19 @@ namespace Wynnyng.Editor
             }
             catch (Exception exception)
             {
-                startAfterPreparation = false;
-                if (!exitBatchWhenReady) throw;
-                Debug.LogException(exception);
-                EditorApplication.Exit(1);
+                FailPreparation(exception);
             }
+        }
+        private static void FailPreparation(Exception exception)
+        {
+            startAfterPreparation = false;
+            StopWaiting();
+            Action<Exception> failed = preparationFailure;
+            preparationReady = null;
+            preparationFailure = null;
+            if (failed != null) { failed(exception); return; }
+            Debug.LogException(exception);
+            if (exitBatchWhenReady) EditorApplication.Exit(1);
         }
         private static void PrepareAssets()
         {

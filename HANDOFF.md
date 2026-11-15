@@ -4,6 +4,23 @@
 
 Português, iniciante em Unity/C#. Unity 6, URP, PC/gamepad, futuro 11×11 e 1–2 jogadores locais. Não tem Blender nem Mixamo. Fazer uma fase por vez; esta solicitação autorizou **Fase 0 e Fase 1A juntas**. **Não começar a Fase 1B até o usuário dizer “próxima” / “próxima fase”.**
 
+Pedido posterior explícito: “Faça uma super correção no jogo, teste, aprimore e faça um exe pra jogar direto no pc.” Foi autorizada a revisão ampla do protótipo e o pipeline Windows. O conteúdo continua sendo o laboratório 0/1A, não um jogo 11×11 pronto. Não apresentar o preparador `.exe` como se fosse o player Unity.
+
+## Revisão ampla e build Windows
+
+- `TagManager.asset` tinha itens de layer vazios como `  -`, rejeitados pelo Unity mostrado na screenshot. Agora usa `  - ""`, com exatamente 32 strings e Ground/Goal/Ball em 8/9/10.
+- O validador Python usa PyYAML 6.0.3, normaliza somente headers Unity e rejeita itens vazios sem valor, chaves duplicadas e schema de layers incorreto. Há 13 testes Python; isso não comprova o parser nativo do Unity.
+- Configs validam finitude de contatos, damping, clips, cores, vetores e cenários. Foram adicionados 12 casos EditMode para NaN/Infinity. Bootstrap exige transform identidade e possui um PlayMode de regressão para posição/rotação/escala incorretas.
+- HUD possui Sair, que encerra o player ou o Play no Editor. Core continua sem dependência no motor.
+- `ProjectPreparation.PrepareForBuild(Action, Action<Exception>)` conclui após preparação async/TMP/URP/SaveAssets; reporta falha/cancelamento e não entra em Play nem encerra o Editor por conta própria.
+- `WindowsBuild.BuildBatch` usa BuildPipeline para StandaloneWindows64/Mono, escreve `work/WindowsBuild/build-result.json` e exige EXE/DLL/_Data antes de declarar sucesso.
+- `tools/Build-and-Play.ps1` encontra o Unity instalado, prepara, executa EditMode e PlayMode, valida XMLs e gera/abre o player. Testes habilitados por padrão. `GERAR_E_JOGAR.cmd` usa o clone atual.
+- `GERAR_E_JOGAR.exe` é um preparador gerenciado Windows (.NET Framework 4.8), compilado por SDK .NET 8 a partir de `tools/WindowsBootstrap/`. Baixa o HEAD da branch por SHA para LocalAppData/Wynnyng/versions, preservando o clone; chama o script usando o Unity do PC. Reutiliza build completo na mesma revisão. O script cria atalho Jogar Wynnyng após sucesso.
+- O ambiente não tem Unity/ativação, portanto NÃO existe player Unity compilado aqui. O EXE entregue é o preparador que produz o jogo no PC do usuário. A CI Windows testa o preparador e o script, não o jogo Unity.
+- Total preparado: **61 casos EditMode, 14 PlayMode** (um gráfico ignorado em batch). Núcleo: 42 testes headless; Python: 13. Não registrar os casos Unity como aprovados sem executar no Editor.
+
+Veja `docs/WINDOWS.md` para comandos, logs e limitações. A falha de qualquer etapa impede abrir um player novo como se o build tivesse passado.
+
 Sensação desejada: arcade-sim de futebol clássico, com conteúdo original. Não copiar código, modelos, som, menus ou dados de outro jogo. Dados reais devem vir de CSV/JSON; elencos de exemplo devem ser explicitamente `isPlaceholder = true`. Nenhum dado de jogador/clube foi criado nesta entrega.
 
 ## Origem e versões

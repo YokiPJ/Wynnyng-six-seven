@@ -6,6 +6,11 @@ import sys
 import uuid
 from pathlib import Path
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "Assets"
 errors = []
@@ -19,6 +24,83 @@ BUILTIN_MODULES = frozenset("com.unity.modules." + name for name in (
     "unitywebrequest", "unitywebrequestassetbundle", "unitywebrequestaudio",
     "unitywebrequesttexture", "vehicles", "video", "vr", "wind", "xr",
 ))
+
+
+if yaml is not None:
+    class UniqueKeyLoader(yaml.SafeLoader):
+        """Reject ambiguous mappings that SafeLoader otherwise accepts by overwriting keys."""
+
+        def construct_mapping(self, node, deep=False):
+            mapping = {}
+            for key_node, value_node in node.value:
+                key = self.construct_object(key_node, deep=deep)
+                if key in mapping:
+                    raise yaml.constructor.ConstructorError(
+                        "while reading a mapping", node.start_mark,
+                        f"duplicate key: {key}", key_node.start_mark)
+                mapping[key] = self.construct_object(value_node, deep=deep)
+            return mapping
+
+
+def serialized_yaml_errors(text):
+    """Check YAML syntax after removing Unity document tags, not Unity's native parser."""
+    if yaml is None:
+        return ["Install validation dependencies: python3 -m pip install -r tools/requirements-validation.txt"]
+    problems = []
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if re.fullmatch(r"\s*-", line):
+            problems.append(
+                f"line {line_number}: bare '-' sequence item; serialize an explicit value such as \"\"")
+    # Unity applies !u! to every document although a YAML %TAG directive only
+    # covers its first document. Strip that document-header extension and its
+    # optional prefab marker, leaving line numbers/content intact for diagnostics.
+    normalized = re.sub(r"(?m)^--- !u!\d+ (&-?\d+)(?: stripped)?[ \t]*$", r"--- \1", text)
+    try:
+        list(yaml.load_all(normalized, Loader=UniqueKeyLoader))
+    except yaml.YAMLError as error:
+        mark = getattr(error, "problem_mark", None)
+        location = f"line {mark.line + 1}: " if mark is not None else ""
+        problems.append(location + str(getattr(error, "problem", error)))
+    return problems
+
+
+def tag_manager_errors(text):
+    """Check the layer contract used by WorldLayers before Unity imports it."""
+    problems = serialized_yaml_errors(text)
+    if problems:
+        return problems
+    normalized = re.sub(r"(?m)^--- !u!\d+ (&-?\d+)(?: stripped)?[ \t]*$", r"--- \1", text)
+    documents = list(yaml.load_all(normalized, Loader=UniqueKeyLoader))
+    if len(documents) != 1 or not isinstance(documents[0], dict):
+        return ["TagManager must contain exactly one mapping document"]
+    manager = documents[0].get("TagManager")
+    if not isinstance(manager, dict):
+        return ["Missing TagManager mapping"]
+    layers = manager.get("layers")
+    if not isinstance(layers, list) or len(layers) != 32:
+        problems.append("TagManager.layers must contain exactly 32 entries")
+    if isinstance(layers, list):
+        for index, name in enumerate(layers):
+            if not isinstance(name, str):
+                problems.append(f"Layer {index} must be a string; use \"\" for an unused slot")
+        required = {0: "Default", 1: "TransparentFX", 2: "Ignore Raycast", 4: "Water", 5: "UI",
+                    8: "Ground", 9: "Goal", 10: "Ball"}
+        for index, name in required.items():
+            if index >= len(layers) or layers[index] != name:
+                problems.append(f"Layer {index} must be {name}")
+    tags = manager.get("tags")
+    if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+        problems.append("TagManager.tags must be an array of strings")
+    sorting = manager.get("m_SortingLayers")
+    if not isinstance(sorting, list) or not any(
+            isinstance(item, dict) and item.get("name") == "Default" and item.get("uniqueID") == 0
+            for item in sorting):
+        problems.append("Default sorting layer with uniqueID 0 is missing")
+    rendering = manager.get("m_RenderingLayers")
+    if not isinstance(rendering, list) or not rendering or rendering[0] != "Default" or any(
+            not isinstance(name, str) for name in rendering):
+        problems.append("Rendering layers must be strings, starting with Default")
+    return problems
 
 
 def builtin_module_errors(dependencies):
@@ -47,6 +129,10 @@ def read_json(path):
 
 
 def main():
+    errors.clear()
+    if yaml is None:
+        print("FAIL: Install validation dependencies: python3 -m pip install -r tools/requirements-validation.txt", file=sys.stderr)
+        return 1
     manifest = read_json(ROOT / "Packages/manifest.json")
     dependencies = manifest.get("dependencies", {})
     errors.extend(builtin_module_errors(dependencies))
@@ -62,6 +148,26 @@ def main():
     check("com.unity.textmeshpro" not in dependencies, "TMP is included in uGUI 2; do not install the old TMP package.")
     settings = (ROOT / "ProjectSettings/ProjectSettings.asset").read_text()
     check(re.search(r"^  activeInputHandler: 1$", settings, re.M), "New Input System must be active.")
+
+    yaml_files = [p for folder in (ASSETS, ROOT / "ProjectSettings") for p in folder.rglob("*")
+                  if p.is_file() and p.suffix in {".meta", ".asset", ".unity", ".prefab", ".mat"}]
+    checked_yaml = 0
+    for path in yaml_files:
+        data = path.read_bytes()
+        # Native binary .asset files are not YAML; .meta files are always text.
+        text_header = data[3:] if data.startswith(b"\xef\xbb\xbf") else data
+        if path.suffix != ".meta" and not text_header.startswith(b"%YAML"):
+            continue
+        try:
+            source = data.decode("utf-8-sig")
+        except UnicodeDecodeError as error:
+            errors.append(f"{path.relative_to(ROOT)}: invalid UTF-8 YAML: {error}")
+            continue
+        checked_yaml += 1
+        errors.extend(f"{path.relative_to(ROOT)}: {problem}" for problem in serialized_yaml_errors(source))
+    tag_manager = ROOT / "ProjectSettings/TagManager.asset"
+    errors.extend(f"ProjectSettings/TagManager.asset: {problem}"
+                  for problem in tag_manager_errors(tag_manager.read_text(encoding="utf-8-sig")))
 
     guids = {}
     all_assets = [p for p in ASSETS.rglob("*") if p.suffix != ".meta"]
@@ -141,7 +247,8 @@ def main():
         for error in errors:
             print("FAIL:", error, file=sys.stderr)
         return 1
-    print(f"PASS: {len(guids)} unique asset/folder GUIDs, {len(assemblies)} acyclic assemblies, built-in modules, input IDs and project settings.")
+    print(f"PASS: {len(guids)} unique asset/folder GUIDs, {len(assemblies)} acyclic assemblies, "
+          f"{checked_yaml} YAML files, built-in modules, input IDs and project settings.")
     print("Unity import, C# engine compilation, shader compilation and PlayMode are separate acceptance gates.")
     return 0
 

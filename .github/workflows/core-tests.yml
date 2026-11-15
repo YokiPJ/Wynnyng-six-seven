@@ -6,6 +6,31 @@ on:
 permissions:
   contents: read
 jobs:
+  windows-tools:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Validate PowerShell build gates
+        shell: pwsh
+        run: ./tools/Test-BuildPipeline.ps1
+      - name: Compile Windows preparation executable
+        run: dotnet build tools/WindowsBootstrap/WindowsBootstrap.csproj -c Release -o work/bootstrap
+      - name: Test compiled and shipped Windows preparation executables
+        shell: pwsh
+        run: |
+          ./work/bootstrap/GERAR_E_JOGAR.exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'Fresh bootstrap self-test failed' }
+          ./GERAR_E_JOGAR.exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'Shipped bootstrap self-test failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Wynnyng-preparador-Windows
+          path: |
+            work/bootstrap/GERAR_E_JOGAR.exe
+            work/bootstrap/GERAR_E_JOGAR.exe.config
   pure-core:
     runs-on: ubuntu-latest
     env:
@@ -16,8 +41,12 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Validate project files
-        run: python3 tools/validate_project.py
-      - name: Test package-name validation
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          python3 -m pip install -r tools/requirements-validation.txt
+          python3 tools/validate_project.py
+      - name: Test validation rules
         run: python3 -m unittest discover -s tools -p 'test_*.py'
       - name: Compile .NET Standard 2.1 and run shared tests
         run: dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release --logger trx --results-directory work/results

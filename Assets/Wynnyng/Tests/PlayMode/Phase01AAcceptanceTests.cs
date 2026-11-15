@@ -61,6 +61,30 @@ namespace Wynnyng.Tests.PlayMode
             LogAssert.NoUnexpectedReceived();
         }
         [UnityTest]
+        public IEnumerator BootstrapRejectsMisalignedPitchCoordinatesBeforeBuilding()
+        {
+            Object.Destroy(root);
+            yield return null;
+            root = new GameObject("Coordinate Contract Fixture");
+            bootstrap = root.AddComponent<MatchBootstrap>();
+            bootstrap.Configure(simulation, pitch, ball, presentation, false, false);
+            root.transform.position = Vector3.right;
+            Assert.Throws<System.InvalidOperationException>(() => bootstrap.Initialize());
+            root.transform.position = Vector3.zero;
+            root.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+            Assert.Throws<System.InvalidOperationException>(() => bootstrap.Initialize());
+            root.transform.rotation = Quaternion.identity;
+            root.transform.localScale = Vector3.one * 2f;
+            Assert.Throws<System.InvalidOperationException>(() => bootstrap.Initialize());
+            Assert.That(root.transform.childCount, Is.Zero);
+            Assert.That(bootstrap.IsInitialized, Is.False);
+            root.transform.localScale = Vector3.one;
+            bootstrap.Initialize();
+            yield return fixedFrame;
+            Assert.That(bootstrap.IsInitialized, Is.True);
+            LogAssert.NoUnexpectedReceived();
+        }
+        [UnityTest]
         public IEnumerator WorldHasTwoSolidGoalsAndOneBall()
         {
             yield return null;

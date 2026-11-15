@@ -81,6 +81,8 @@ namespace Wynnyng.Runtime
             if (presentation == null) presentation = Resources.Load<PresentationConfig>("Config/Presentation");
             if (simulation == null || pitch == null || ball == null || presentation == null)
                 throw new InvalidOperationException("Missing configs. Run Wynnyng > Preparar Fases 0 e 1A.");
+            if (transform.position != Vector3.zero || transform.rotation != Quaternion.identity || transform.lossyScale != Vector3.one)
+                throw new InvalidOperationException("Wynnyng Bootstrap deve ficar na origem, sem rotacao e com escala 1.");
             if (FindObjectsByType<MatchBootstrap>(FindObjectsSortMode.None).Length != 1)
                 throw new InvalidOperationException("Open one laboratory scene at a time.");
             simulation.ValidateOrThrow(); ball.ValidateOrThrow(); pitch.ValidateOrThrow(ball.Radius); presentation.ValidateOrThrow();
@@ -155,6 +157,14 @@ namespace Wynnyng.Runtime
         }
         public void RequestLaunch() { launchRequested = true; resetRequested = false; }
         public void RequestReset() { resetRequested = true; launchRequested = false; }
+        public void RequestExit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
         private void LaunchScenario()
         {
             LaboratoryScenario scenario = presentation.Scenarios[selectedScenario];

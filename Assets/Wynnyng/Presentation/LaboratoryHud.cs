@@ -77,7 +77,8 @@ namespace Wynnyng.Presentation
             ButtonAt(bottom, "Lancar bola", new Vector2(pad + third, -pad - h * 2f), third, lab.RequestLaunch);
             ButtonAt(bottom, "Proximo >", new Vector2(pad + third * 2f, -pad - h * 2f), third, () => lab.SelectScenario(1));
             ButtonAt(bottom, "Repor bola", new Vector2(pad, -pad - h * 3f), third, lab.RequestReset);
-            laboratoryFocus = ButtonAt(bottom, "Controles", new Vector2(pad + third, -pad - h * 3f), third * 2f, ToggleBindings);
+            laboratoryFocus = ButtonAt(bottom, "Controles", new Vector2(pad + third, -pad - h * 3f), third, ToggleBindings);
+            ButtonAt(bottom, "Sair", new Vector2(pad + third * 2f, -pad - h * 3f), third, lab.RequestExit);
             Label(bottom, "D-pad: caso  |  RB: lancar  |  Select: repor\nTeclado: setas, Enter, R  |  Start/F1: controles",
                 new Vector2(pad, -pad - h * 4f), config.HudWidth - pad * 2f, h, Color.white, config.FontSize * 0.72f);
             BuildRebindPanel();

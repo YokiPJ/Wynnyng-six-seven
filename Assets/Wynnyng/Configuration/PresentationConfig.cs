@@ -50,12 +50,29 @@ namespace Wynnyng.Configuration
         };
         public void ValidateOrThrow()
         {
-            if (OverviewPosition == OverviewTarget || NearClip <= 0f || FarClip <= NearClip || FieldOfView <= 0f ||
-                FieldOfView >= 180f || StatusInterval <= 0f || AutoResetDelay < 0f || SafetyResetHeight <= 0f ||
-                MarkerRadius <= 0f || MarkerWidth <= 0f || ReferenceResolution.x <= 0f || ReferenceResolution.y <= 0f ||
-                FontSize <= 0f || PanelPadding <= 0f || ButtonHeight <= 0f || RebindPanelWidth <= 0f ||
-                HudWidth <= 0f || Scenarios == null || Scenarios.Length == 0)
+            if (!ConfigValidation.Finite(OverviewPosition) || !ConfigValidation.Finite(OverviewTarget) ||
+                !ConfigValidation.Finite(OverviewTarget - OverviewPosition) || OverviewPosition == OverviewTarget ||
+                !ConfigValidation.Positive(NearClip) || !ConfigValidation.Positive(FarClip) || FarClip <= NearClip ||
+                !ConfigValidation.Positive(FieldOfView) || FieldOfView >= 180f ||
+                !ConfigValidation.Finite(Background) || !ConfigValidation.Finite(LightEulerAngles) ||
+                !ConfigValidation.NonNegative(LightIntensity) || !ConfigValidation.Positive(StatusInterval) ||
+                !ConfigValidation.NonNegative(AutoResetDelay) || !ConfigValidation.Positive(SafetyResetHeight) ||
+                !ConfigValidation.Positive(MarkerRadius) || !ConfigValidation.Positive(MarkerWidth) ||
+                !ConfigValidation.Finite(Accent) || !ConfigValidation.Finite(ReferenceResolution) ||
+                ReferenceResolution.x <= 0f || ReferenceResolution.y <= 0f ||
+                !ConfigValidation.Positive(FontSize) || !ConfigValidation.Positive(PanelPadding) ||
+                !ConfigValidation.Positive(ButtonHeight) || !ConfigValidation.Positive(RebindPanelWidth) ||
+                !ConfigValidation.Positive(HudWidth) || Scenarios == null || Scenarios.Length == 0)
                 throw new InvalidOperationException("PresentationConfig: invalid camera, HUD or lab settings.");
+
+            for (int i = 0; i < Scenarios.Length; i++)
+            {
+                LaboratoryScenario scenario = Scenarios[i];
+                if (string.IsNullOrWhiteSpace(scenario.Name) || !ConfigValidation.Finite(scenario.Start) ||
+                    Mathf.Abs(scenario.Start.x) > 1f || Mathf.Abs(scenario.Start.z) > 1f || scenario.Start.y < 0f ||
+                    !ConfigValidation.Finite(scenario.Velocity) || !ConfigValidation.Finite(scenario.Spin))
+                    throw new InvalidOperationException("PresentationConfig: invalid laboratory scenario at index " + i + ".");
+            }
         }
     }
 }

@@ -2,6 +2,8 @@
 
 Projeto original de futebol 3D para PC/gamepad. Este pacote implementa a base do projeto e o laboratório de campo/bola. O controle de um jogador começa na Fase 1B, somente depois do comando **“próxima”**.
 
+**Para gerar e abrir no Windows:** feche o Editor e execute [GERAR_E_JOGAR.exe](GERAR_E_JOGAR.exe). O preparador baixa a revisão mais recente, usa seu Unity instalado, prepara TMP/URP, roda EditMode/PlayMode e gera `Wynnyng.exe`. O player Unity ainda será compilado no seu PC; o arquivo entregue é o preparador. [Instruções e limites](docs/WINDOWS.md).
+
 **Suposição:** Unity **6000.0.62f1 (Unity 6.0 LTS)**, Windows, 1 unidade = 1 metro, campo no plano XZ, +Y para cima. Sem Blender, Mixamo ou assets de outro jogo.
 
 O projeto foi escrito para essa versão. **O Editor Unity não estava disponível no ambiente de desenvolvimento: a compilação no Unity, os testes EditMode/PlayMode e o desempenho na GTX 1060 ainda precisam ser executados.** Os testes do núcleo C# foram executados em .NET; veja [VALIDACAO.md](docs/VALIDACAO.md).
@@ -138,6 +140,8 @@ dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release
 ```
 
 O projeto `tools/CoreLibrary/` compila os mesmos fontes do núcleo para **.NET Standard 2.1**, perfil compatível com o alvo Unity. O runner .NET executa os mesmos testes puros do EditMode e um teste adicional de alocação. Ele não simula PhysX e não compila os scripts que dependem do motor.
+
+Antes da validação Python, instale `python3 -m pip install -r tools/requirements-validation.txt`. Ela confere o YAML textual, incluindo 32 layers com strings vazias explícitas; não executa o parser nativo do Unity. Os testes de configuração também rejeitam NaN/Infinity, e o bootstrap verifica origem/rotação/escala antes de construir o campo.
 
 Opcional, PowerShell com o Editor fechado e licenciado:
 

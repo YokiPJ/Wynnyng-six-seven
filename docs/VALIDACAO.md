@@ -9,8 +9,11 @@ Ambiente Linux, .NET SDK **8.0.428**, sem Unity Editor instalado/licenciado. Ins
 | Compilação do núcleo | **Passou**, C# 9, .NET Standard 2.1, warnings tratados como erros |
 | Testes do núcleo em .NET 8 | **42 passaram, 0 falhas, 0 ignorados** |
 | Alocação do núcleo após aquecimento | **0 bytes gerenciados** em 60.000 passos, incluindo física pura, sessão, RNG e publicação de eventos |
-| Sintaxe dos scripts de Assets | **28 arquivos, 0 erros** com Roslyn/C# 9; não verifica tipos do motor |
-| Estrutura do projeto | **Passou**: 59 GUIDs únicos de assets/pastas, 8 assemblies sem ciclos, referências e IDs das ações válidos |
+| Sintaxe dos scripts de Assets | **29 arquivos**, verificação Roslyn/C# 9; não verifica tipos do motor |
+| Estrutura do projeto | **60 GUIDs**, 8 assemblies sem ciclos, **69 arquivos YAML** e referências verificadas |
+| Regressões Python | **13 passaram**, incluindo o formato inválido do TagManager e schema de layers |
+| Script de build | AST e testes de quoting, descoberta e gates XML passaram em PowerShell 7.4.6; sem executar Unity |
+| Preparador Windows | Compilado .NET Framework 4.8 sem warnings/erros; self-tests de quoting, ZIP traversal e recibo passaram; não é o player Unity |
 | APIs antigas / código incompleto | Sem usos de Input legado, `FindObjectOfType`, `FindObjectsOfType`, LINQ ou marcadores de implementação pendente nos scripts |
 | Espaços/diff | `git diff --check` sem problemas; verificação repetida após adicionar os arquivos ao índice |
 
@@ -57,14 +60,21 @@ A screenshot seguinte mostra o HUD/clock ativos e apenas o fundo da câmera. A �
 
 **Os testes do motor e de pixels continuam não executados aqui.** A verificação de sintaxe/estrutura e a CI do núcleo não comprovam que o campo foi renderizado.
 
+## TagManager e geração Windows
+
+O erro de parse mostrado na linha 41 do TagManager ocorreu com entradas de layer vazias como `  -`. Elas foram substituídas por strings explícitas `  - ""`. A validação passa pelos arquivos de settings/assets/cena/metas e rejeita esse formato, chaves repetidas e mudanças dos índices de layers. Os outros arquivos YAML presentes passaram nessa verificação genérica.
+
+Foram reforçadas as configurações não finitas e o contrato de transform do bootstrap, além do botão Sair. O pipeline Windows prepara, testa e usa BuildPipeline, mas precisa do Editor instalado/ativado no PC. O preparador `GERAR_E_JOGAR.exe` baixa a revisão atual e automatiza essas etapas. **Não há player do jogo gerado neste ambiente**, pois não há Unity nem licença disponível. Os testes da CI Windows são do preparador/scripts.
+
 ## Preparado, sem execução neste ambiente
 
 | Aceite | Como verificar |
 |---|---|
 | Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |
 | Resolução efetiva dos pacotes | Package Manager; primeiro import gera `packages-lock.json` |
-| EditMode | Test Runner: 49 casos esperados, incluindo configurações, entrada, TMP e configuração URP |
-| PlayMode | Test Runner: 13 testes, incluindo um teste gráfico ignorado em batch/nographics |
+| EditMode | Test Runner: 61 casos esperados, incluindo validação de valores não finitos |
+| PlayMode | Test Runner: 14 testes, incluindo transform inválido e um caso gráfico ignorado em batch |
+| Player Windows | O preparador gera no PC usando o Unity instalado; não foi gerado/executado aqui |
 | HLSL, materiais e layout da interface | Inspeção em Play no Editor com renderização habilitada |
 | Hotplug, remapeamento e dois controles físicos | Checklist manual do README |
 | 60 FPS / GTX 1060 / GC da integração | Development Build Windows e Profiler após aquecimento |

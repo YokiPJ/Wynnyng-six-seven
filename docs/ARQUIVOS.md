@@ -1,6 +1,6 @@
-# Arquivos criados — Fases 0 + 1A
+# Arquivos do projeto atualizado
 
-O repositório estava vazio. Todos os arquivos abaixo foram criados; nenhum arquivo existente foi substituído. `.meta` fixa os GUIDs usados nas referências Unity.
+O repositório começou vazio. Esta árvore inclui as correções, o preparador Windows e o pipeline de testes/build. Metadados fixam os GUIDs do Unity.
 
 ```text
 .gitattributes
@@ -38,6 +38,8 @@ Assets/Wynnyng/Core/Wynnyng.Core.asmdef.meta
 Assets/Wynnyng/Editor.meta
 Assets/Wynnyng/Editor/ProjectPreparation.cs
 Assets/Wynnyng/Editor/ProjectPreparation.cs.meta
+Assets/Wynnyng/Editor/WindowsBuild.cs
+Assets/Wynnyng/Editor/WindowsBuild.cs.meta
 Assets/Wynnyng/Editor/Wynnyng.Editor.asmdef
 Assets/Wynnyng/Editor/Wynnyng.Editor.asmdef.meta
 Assets/Wynnyng/Input.meta
@@ -52,10 +54,10 @@ Assets/Wynnyng/Presentation/LaboratoryHud.cs
 Assets/Wynnyng/Presentation/LaboratoryHud.cs.meta
 Assets/Wynnyng/Presentation/OverviewCameraFactory.cs
 Assets/Wynnyng/Presentation/OverviewCameraFactory.cs.meta
-Assets/Wynnyng/Presentation/RenderingResources.cs
-Assets/Wynnyng/Presentation/RenderingResources.cs.meta
 Assets/Wynnyng/Presentation/PitchFactory.cs
 Assets/Wynnyng/Presentation/PitchFactory.cs.meta
+Assets/Wynnyng/Presentation/RenderingResources.cs
+Assets/Wynnyng/Presentation/RenderingResources.cs.meta
 Assets/Wynnyng/Presentation/RuntimeAssets.cs
 Assets/Wynnyng/Presentation/RuntimeAssets.cs.meta
 Assets/Wynnyng/Presentation/TmpResources.cs
@@ -109,6 +111,9 @@ Assets/Wynnyng/Tests/PlayMode/Phase01AAcceptanceTests.cs
 Assets/Wynnyng/Tests/PlayMode/Phase01AAcceptanceTests.cs.meta
 Assets/Wynnyng/Tests/PlayMode/Wynnyng.Tests.PlayMode.asmdef
 Assets/Wynnyng/Tests/PlayMode/Wynnyng.Tests.PlayMode.asmdef.meta
+GERAR_E_JOGAR.cmd
+GERAR_E_JOGAR.exe
+GERAR_E_JOGAR.exe.config
 HANDOFF.md
 Packages/manifest.json
 ProjectSettings/EditorBuildSettings.asset
@@ -119,12 +124,18 @@ ProjectSettings/TimeManager.asset
 README.md
 docs/ARQUIVOS.md
 docs/VALIDACAO.md
+docs/WINDOWS.md
+tools/Build-and-Play.ps1
 tools/CoreLibrary/Wynnyng.Core.csproj
 tools/HeadlessChecks/AllocationTests.cs
 tools/HeadlessChecks/HeadlessChecks.csproj
+tools/Test-BuildPipeline.ps1
+tools/WindowsBootstrap/Program.cs
+tools/WindowsBootstrap/WindowsBootstrap.csproj
+tools/requirements-validation.txt
 tools/run-unity-tests.ps1
 tools/test_validate_project.py
 tools/validate_project.py
 ```
 
-Criados pelo comando de preparação no Editor: `Assets/Wynnyng/Rendering/` (URP/renderer), recursos essenciais TMP e settings adicionais do próprio Unity. `packages-lock.json` será gerado pelo Package Manager. Não são arquivos que tenham sido gerados/validados pelo Unity neste ambiente.
+O Unity gera Rendering/TMP/Library e o player no PC durante a preparação. GERAR_E_JOGAR.exe é o preparador; o jogo real é gerado como Builds/Windows/Wynnyng.exe com DLLs e pasta _Data.

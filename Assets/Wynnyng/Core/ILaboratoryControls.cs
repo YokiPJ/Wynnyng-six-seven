@@ -12,5 +12,6 @@ namespace Wynnyng.Core
         void SelectScenario(int direction);
         void RequestLaunch();
         void RequestReset();
+        void RequestExit();
     }
 }

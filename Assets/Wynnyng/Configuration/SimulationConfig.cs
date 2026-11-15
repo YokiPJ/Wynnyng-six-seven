@@ -21,9 +21,23 @@ namespace Wynnyng.Configuration
         {
             if (FixedFrequency != 60 || TargetFrameRate < 1 ||
                 MaximumFrameDelta < 1f / FixedFrequency || EventCapacity < 1 ||
-                SolverIterations < 1 || SolverVelocityIterations < 1 || BounceThreshold < 0f ||
-                !float.IsFinite(MaximumFrameDelta) || !float.IsFinite(Gravity.sqrMagnitude) || Gravity.y >= 0f)
+                SolverIterations < 1 || SolverVelocityIterations < 1 || !ConfigValidation.NonNegative(BounceThreshold) ||
+                !ConfigValidation.Finite(MaximumFrameDelta) || !ConfigValidation.Finite(Gravity) || Gravity.y >= 0f)
                 throw new InvalidOperationException("SimulationConfig: use 60 Hz, gravity down and valid positive limits.");
         }
+    }
+
+    internal static class ConfigValidation
+    {
+        public static bool Finite(float value) => float.IsFinite(value);
+        public static bool Positive(float value) => Finite(value) && value > 0f;
+        public static bool NonNegative(float value) => Finite(value) && value >= 0f;
+        public static bool UnitRange(float value) => Finite(value) && value >= 0f && value <= 1f;
+        public static bool Finite(Vector2 value) =>
+            Finite(value.x) && Finite(value.y) && Finite(value.sqrMagnitude);
+        public static bool Finite(Vector3 value) =>
+            Finite(value.x) && Finite(value.y) && Finite(value.z) && Finite(value.sqrMagnitude);
+        public static bool Finite(Color value) =>
+            Finite(value.r) && Finite(value.g) && Finite(value.b) && Finite(value.a);
     }
 }

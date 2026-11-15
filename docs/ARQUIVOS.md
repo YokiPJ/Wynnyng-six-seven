@@ -115,6 +115,7 @@ tools/CoreLibrary/Wynnyng.Core.csproj
 tools/HeadlessChecks/AllocationTests.cs
 tools/HeadlessChecks/HeadlessChecks.csproj
 tools/run-unity-tests.ps1
+tools/test_validate_project.py
 tools/validate_project.py
 ```
 

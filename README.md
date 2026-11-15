@@ -72,6 +72,14 @@ O comando de preparação preserva configurações/cena que já existem e preser
 
 O campo nasce ao entrar em Play. É esperado que a Scene esteja quase vazia fora do Play. Mantenha `Wynnyng Bootstrap` na origem, sem rotação e com escala 1.
 
+Se você baixou a primeira entrega e apareceu **Package Manager Error** dizendo que `com.unity.modules.screen-capture` não existe:
+
+1. Feche o Editor; se a janela de erro estiver aberta, clique em **Quit**.
+2. Na pasta do projeto, abra `Packages/manifest.json` no Bloco de Notas.
+3. Troque somente `com.unity.modules.screen-capture` por `com.unity.modules.screencapture`, preservando `"1.0.0"` e a vírgula.
+4. Salve e reabra o projeto pelo Hub. O nome já está corrigido na branch `codex/phase-0-1a`.
+5. Execute **Wynnyng → Preparar Fases 0 e 1A**, depois **Wynnyng → Abrir laboratorio Fase 1A**, e aperte **Play** na aba **Game**. A cena `Untitled` com câmera/luz não é o laboratório.
+
 ## 4. Controles preparados para a Fase 1B
 
 Estes comandos já existem no asset de entrada. Nesta entrega, somente os comandos do laboratório e o menu de remapeamento produzem ações visíveis.
@@ -105,6 +113,7 @@ Sem Unity, com Python 3 e .NET SDK 8 instalados:
 
 ```sh
 python3 tools/validate_project.py
+python3 -m unittest discover -s tools -p 'test_*.py'
 dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release
 ```
 

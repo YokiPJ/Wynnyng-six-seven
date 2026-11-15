@@ -20,10 +20,19 @@ Comandos reproduzíveis:
 
 ```sh
 python3 tools/validate_project.py
+python3 -m unittest discover -s tools -p 'test_*.py'
 dotnet test tools/HeadlessChecks/HeadlessChecks.csproj --configuration Release
 ```
 
 A CI em `.github/workflows/core-tests.yml` também executou com **sucesso** no GitHub: [Core CSharp tests, execução 43674594509](https://github.com/YokiPJ/Wynnyng-six-seven/actions/runs/43674594509), referente ao commit de código `94017c7d4df46b2b4788ff29a020bd02b66194ca`. O XML TRX fica no artefato `core-test-results` dessa execução. Essa CI não exige licença Unity e não executa o motor.
+
+## Correção após a abertura do usuário
+
+O screenshot de **Package Manager Error** confirmou uma falha do manifest inicial: `com.unity.modules.screen-capture@1.0.0` não existe. Foi corrigido para [`com.unity.modules.screencapture@1.0.0`](https://docs.unity3d.com/6000.0/Documentation/Manual/com.unity.modules.screencapture.html).
+
+As páginas do manual Unity 6 dos outros 23 módulos declarados foram consultadas e existem sob os nomes usados. Isso confirma nomenclatura; a resolução efetiva dentro do Editor continua sendo um aceite separado. A CI anterior verificava somente os cinco pacotes principais, sem verificar os nomes dos módulos embutidos, e por isso deixou o erro passar.
+
+O validador agora inclui nomes e versões dos módulos. Quatro testes Python verificam a rejeição do erro original, a aceitação do nome correto, uma versão inválida e o manifest entregue. O README descreve a correção local de uma linha e como abrir a cena certa após a resolução dos pacotes. Nenhum sistema da Fase 1B foi iniciado.
 
 ## Preparado, sem execução neste ambiente
 

@@ -17,6 +17,8 @@ jobs:
           dotnet-version: 8.0.x
       - name: Validate project files
         run: python3 tools/validate_project.py
+      - name: Test package-name validation
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
       - name: Compile .NET Standard 2.1 and run shared tests
         run: dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release --logger trx --results-directory work/results
       - uses: actions/upload-artifact@v4

@@ -10,6 +10,28 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "Assets"
 errors = []
 
+# Names checked against the Unity 6 manual. Extend this set only after checking
+# the corresponding com.unity.modules.<name> documentation for this Editor.
+BUILTIN_MODULES = frozenset("com.unity.modules." + name for name in (
+    "animation", "assetbundle", "audio", "director", "imageconversion",
+    "imgui", "jsonserialize", "particlesystem", "physics", "physics2d",
+    "screencapture", "terrain", "terrainphysics", "ui", "uielements",
+    "unitywebrequest", "unitywebrequestassetbundle", "unitywebrequestaudio",
+    "unitywebrequesttexture", "vehicles", "video", "vr", "wind", "xr",
+))
+
+
+def builtin_module_errors(dependencies):
+    problems = []
+    for name, version in dependencies.items():
+        if not name.startswith("com.unity.modules."):
+            continue
+        if name not in BUILTIN_MODULES:
+            problems.append(f"Unknown or unverified Unity 6 built-in module: {name}")
+        if version != "1.0.0":
+            problems.append(f"Unexpected built-in module version: {name}@{version}")
+    return problems
+
 
 def check(condition, message):
     if not condition:
@@ -27,6 +49,7 @@ def read_json(path):
 def main():
     manifest = read_json(ROOT / "Packages/manifest.json")
     dependencies = manifest.get("dependencies", {})
+    errors.extend(builtin_module_errors(dependencies))
     expected = {
         "com.unity.cinemachine": "3.1.3",
         "com.unity.inputsystem": "1.11.2",
@@ -118,7 +141,7 @@ def main():
         for error in errors:
             print("FAIL:", error, file=sys.stderr)
         return 1
-    print(f"PASS: {len(guids)} unique asset/folder GUIDs, {len(assemblies)} acyclic assemblies, input IDs and project settings.")
+    print(f"PASS: {len(guids)} unique asset/folder GUIDs, {len(assemblies)} acyclic assemblies, built-in modules, input IDs and project settings.")
     print("Unity import, C# engine compilation, shader compilation and PlayMode are separate acceptance gates.")
     return 0
 

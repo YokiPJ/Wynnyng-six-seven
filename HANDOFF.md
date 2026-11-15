@@ -13,6 +13,7 @@ Sensação desejada: arcade-sim de futebol clássico, com conteúdo original. N�
 - Unity **6000.0.62f1**, revisão **f99f05b3e950**, versão confirmada na API pública de releases da Unity.
 - URP **17.0.4**, Input System **1.11.2**, Cinemachine **3.1.3**, uGUI **2.0.0** com TMP, Test Framework **1.4.5**.
 - Novo backend ativo: `activeInputHandler: 1`. Sem `UnityEngine.Input` legado, `.velocity`/`.drag` antigos ou namespace Cinemachine 2.
+- Correção após a primeira abertura do usuário: o manifest inicial tinha `com.unity.modules.screen-capture`, nome inválido. O correto é **`com.unity.modules.screencapture`**, versão 1.0.0. Os outros 23 módulos declarados foram conferidos nas páginas do manual Unity 6. O validador agora verifica nomes/versões de módulos e tem 4 testes de regressão Python executados na CI. Isso não equivale a resolver pacotes dentro do Editor.
 - Manifest versionado. `packages-lock.json` será produzido pelo primeiro import no Editor, sem inventar uma resolução não executada.
 
 ## Estado de aceite
@@ -33,6 +34,8 @@ Implementação das Fases 0/1A entregue em arquivos completos. O ambiente de des
 4. Wynnyng → Abrir laboratorio Fase 1A → Play, Game 16:9.
 5. D-pad escolhe cenário, RB lança, Select/View repõe; teclado setas/Enter/R. Start/F1 abre controles.
 6. Window → General → Test Runner → Run All em EditMode e PlayMode.
+
+Se estiver usando o ZIP inicial, corrigir essa única chave em `Packages/manifest.json` com o Editor fechado, salvar e reabrir. O erro de resolução foi observado em screenshot do usuário. Outra screenshot mostra `Untitled` com Main Camera/Directional Light: abrir a cena do laboratório pelo menu antes de esperar campo/bola. Não pedir reinstalação do Unity; a versão mostrada é a correta, 6000.0.62f1.
 
 Menu de preparação é idempotente: preserva SOs/cena existentes e outras cenas de build. Cria assets de renderização em `Assets/Wynnyng/Rendering/`. Se esses assets ou recursos TMP ainda não existirem, executar o menu antes do Play. Não alterar projetos fora deste repositório.
 

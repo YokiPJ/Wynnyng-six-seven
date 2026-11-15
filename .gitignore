@@ -28,4 +28,5 @@ Thumbs.db
 **/bin/
 **/obj/
 TestResults/
+__pycache__/
 *.log

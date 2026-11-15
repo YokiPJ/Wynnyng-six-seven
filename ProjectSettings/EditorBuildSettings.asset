@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Wynnyng/Scenes/FootballMatch.unity
+    guid: da0462a7766f4e37b48c743c6c2f8f69
+  - enabled: 1
     path: Assets/Wynnyng/Scenes/Phase01A.unity
     guid: 01ad36240c2b53bca66505d6df3b4183
   m_configObjects: {}

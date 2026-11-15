@@ -1,170 +1,95 @@
-# HANDOFF — Wynnyng, Fases 0 + 1A
+# HANDOFF — Wynnyng: partida de teste 11×11
 
-## Contrato com o usuário
+## Autorização atual
 
-Português, iniciante em Unity/C#. Unity 6, URP, PC/gamepad, futuro 11×11 e 1–2 jogadores locais. Não tem Blender nem Mixamo. Fazer uma fase por vez; esta solicitação autorizou **Fase 0 e Fase 1A juntas**. **Não começar a Fase 1B até o usuário dizer “próxima” / “próxima fase”.**
+Usuário iniciante, português, Unity 6/URP e PC/gamepad. Pedido inicial autorizava laboratório Fases 0/1A e exigia aguardar “próxima” para avançar. **Pedido posterior explícito substituiu essa restrição para esta entrega:** “coloque CPU pra jogar contra e dois times pra teste, arrume todo o jogo”. A entrega atual implementa uma partida de teste com elementos de 1B/2 e HUD de apoio. Não afirmar que todo o roteiro original, regras completas ou Brasileirão foram concluídos.
 
-Pedido posterior explícito: “Faça uma super correção no jogo, teste, aprimore e faça um exe pra jogar direto no pc.” Foi autorizada a revisão ampla do protótipo e o pipeline Windows. O conteúdo continua sendo o laboratório 0/1A, não um jogo 11×11 pronto. Não apresentar o preparador `.exe` como se fosse o player Unity.
+Repositório: https://github.com/YokiPJ/Wynnyng-six-seven . Branch de entrega `codex/phase-0-1a`, também consultada pelo preparador Windows. A cena padrão do player é `Assets/Wynnyng/Scenes/FootballMatch.unity`; o laboratório `Phase01A.unity` é preservado para diagnóstico.
 
-## Revisão ampla e build Windows
+## Versões e ambiente
 
-O log real do preparador na revisão 9ebb64a chegou ao compilador C# do Unity e abortou com CS0266 em `WindowsBuild.cs` linhas 108/109. `BuildSummary.totalErrors` e `.totalWarnings` são `int` no Unity 6000.0.62f1; o recibo estava incorretamente declarado `uint`. Ambos os campos foram corrigidos para `int`, sem cast. A licença foi resolvida/atualizada antes da compilação no log; não atribuir essa falha a licença, rede ou espera. O runner agora extrai erros do log para o console e tem regressão PowerShell baseada nesse diagnóstico. Executar o mesmo preparador novamente baixa o HEAD corrigido em outra revisão; não requer editar o clone ou baixar outro EXE.
+Unity **6000.0.62f1**, revisão f99f05b3e950; URP 17.0.4; Input System 1.11.2; Cinemachine 3.1.3 namespace Unity.Cinemachine; uGUI 2.0.0/TMP; Test Framework 1.4.5. Fixed60 Hz; novo Input System (`activeInputHandler:1`). Sem APIs Input legadas; Rigidbody usa linearVelocity/linearDamping.
 
-Na revisão f6a28cc, o usuário confirmou pelo console: preparação concluída em 290 s e **61 EditMode aprovados** em 25 s. PlayMode produziu 14 casos e agregado `Skipped:Ignored`; o script anterior bloqueou esse agregado antes do build. O XML completo do usuário não foi recebido, portanto não afirmar quantos casos individuais PlayMode passaram. Foi reproduzido separadamente com o DLL oficial `com.unity.ext.nunit` 2.0.3: 13 resultados de folhas aprovados + 1 ignorado geram `Skipped:Ignored` para a suíte. Essa reprodução de agregação não executa testes Unity.
+Ambiente de desenvolvimento Linux sem Editor Unity/licença. SDK .NET 8.0.428 e PowerShell 7.4.6 estão disponíveis. **Nenhum player Unity foi gerado/executado aqui.** O preparador .NET Framework 4.8 foi compilado separadamente e gera o jogo no PC Windows com Editor instalado/ativado e suporte Windows Mono.
 
-O gate agora verifica cada caso e as suítes. Aceita somente a exceção prevista de PlayMode: `Wynnyng.Tests.PlayMode.Phase01AAcceptanceTests.GraphicalPlayerRendersGrassInsteadOfOnlyTheClearBackground`, com resultado Skipped, label Ignored e a mensagem exata sobre Editor gráfico. Exige pelo menos um caso aprovado; bloqueia outros ignorados, inconclusivos, falhas e suítes com falha, inclusive OneTimeTearDown. Mostra contagens separadas e os nomes/mensagens de falhas. Regressões cobrem 13 aprovados + 1 visual ignorado e relatórios inválidos. A CI também verifica Windows PowerShell 5.1, usado pelo preparador, além de PowerShell 7. Build/player e inspeção visual ainda precisam de confirmação no PC.
+## Arquitetura
 
-- `TagManager.asset` tinha itens de layer vazios como `  -`, rejeitados pelo Unity mostrado na screenshot. Agora usa `  - ""`, com exatamente 32 strings e Ground/Goal/Ball em 8/9/10.
-- O validador Python usa PyYAML 6.0.3, normaliza somente headers Unity e rejeita itens vazios sem valor, chaves duplicadas e schema de layers incorreto. Há 13 testes Python; isso não comprova o parser nativo do Unity.
-- Configs validam finitude de contatos, damping, clips, cores, vetores e cenários. Foram adicionados 12 casos EditMode para NaN/Infinity. Bootstrap exige transform identidade e possui um PlayMode de regressão para posição/rotação/escala incorretas.
-- HUD possui Sair, que encerra o player ou o Play no Editor. Core continua sem dependência no motor.
-- `ProjectPreparation.PrepareForBuild(Action, Action<Exception>)` conclui após preparação async/TMP/URP/SaveAssets; reporta falha/cancelamento e não entra em Play nem encerra o Editor por conta própria.
-- `WindowsBuild.BuildBatch` usa BuildPipeline para StandaloneWindows64/Mono, escreve `work/WindowsBuild/build-result.json` e exige EXE/DLL/_Data antes de declarar sucesso.
-- `tools/Build-and-Play.ps1` encontra o Unity instalado, prepara, executa EditMode e PlayMode, valida XMLs e gera/abre o player. Testes habilitados por padrão. `GERAR_E_JOGAR.cmd` usa o clone atual.
-- `GERAR_E_JOGAR.exe` é um preparador gerenciado Windows (.NET Framework 4.8), compilado por SDK .NET 8 a partir de `tools/WindowsBootstrap/`. Baixa o HEAD da branch por SHA para LocalAppData/Wynnyng/versions, preservando o clone; chama o script usando o Unity do PC. Reutiliza build completo na mesma revisão. O script cria atalho Jogar Wynnyng após sucesso.
-- O ambiente não tem Unity/ativação, portanto NÃO existe player Unity compilado aqui. O EXE entregue é o preparador que produz o jogo no PC do usuário. A CI Windows testa o preparador e o script, não o jogo Unity.
-- Total preparado: **61 casos EditMode, 14 PlayMode** (um gráfico ignorado em batch). Núcleo: 42 testes headless; Python: 13. Não registrar os casos Unity como aprovados sem executar no Editor.
+Oito asmdefs: Core sem Unity; Configuration depende Core; Input depende Core/InputSystem; Presentation depende Core/Configuration/Input/CM3/URP/TMP/uGUI; Runtime agrega os adaptadores; Editor prepara/builda; testes EditMode/PlayMode separados. Não criar ciclos nem dependência Core→Unity.
 
-Veja `docs/WINDOWS.md` para comandos, logs e limitações. A falha de qualquer etapa impede abrir um player novo como se o build tivesse passado.
+- `Core/FootballParameters.cs`: classe serializável de tuning e formação4-4-2 (11 slots normalizados). `Clone()` copia profundamente a formação. `Validate()` roda na inicialização; reflexão só fora do loop.
+- `Core/FootballTypes.cs`: 22 estados de jogador fixos, estatísticas por time, fases e ações da bola.
+- `Core/FootballMatch.cs`: lógica pura. Constructor recebe parameters, PitchGeometry e IRandomSource. Arrays/classes alocados uma vez. `Step(dt,ballPosition,ballVelocity,homeCommand,awayCommand,twoPlayers)` devolve `FootballBallAction`; o Rigidbody continua dono da bola.
+- `Core/PlayerCommandBuffer.cs`: analog/held mais OR de bordas até Consume no passo fixo; Consume limpa somente bordas. Clear em pausa/reinício. Evita perder toques entre FixedUpdates ou repetir botões no catch-up.
+- `Core/IFootballControls.cs`: interface de Match, pausa, reinício, modos e saída para UI.
+- `Runtime/FootballBootstrap.cs`: preflight de configs/TMP/URP e transform identidade, cria campo/bola/22 corpos kinematic, amostra entrada Update em coordenadas da câmera, avança simulação60 Hz no FixedUpdate, aplica ações à bola e MovePosition aos atletas. Rigidbody interpolate; cápsulas têm raio Gameplay.PlayerRadius e altura FootballConfig.PlayerHeight. Guarda/restaura globais inclusive Time.timeScale; limpa mundo parcial em falha.
+- `Presentation/FootballPlayerVisuals.cs`: modelos humanos originais de primitivas, materiais compartilhados, números TMP, corrida procedural e anéis de seleção. Só anima filhos visuais; não escreve posição/rotação dos roots físicos.
+- `Presentation/FootballCameraRig.cs`: Wide lateral próxima, 70%bola/30%centro, smoothing/zoom. CM3 ForceCameraPosition e Brain ManualUpdate, inicializado antes de habilitar saída. Sem suposições de ordem automática do Brain.
+- `Presentation/FootballHud.cs`: placar/relógio/status/stamina/carga, ajuda, pausa/menu, modo1P/2P/CPUdemo, nova partida/saída, remapeamento e5sliders. TMP numericSetText e aquecimento; alocações de criação/rebind/menu são permitidas, sem LINQ/new no loop estável. Em jogo, navegação UI e seleção estão desabilitadas para Sul não clicar em botões.
 
-Sensação desejada: arcade-sim de futebol clássico, com conteúdo original. Não copiar código, modelos, som, menus ou dados de outro jogo. Dados reais devem vir de CSV/JSON; elencos de exemplo devem ser explicitamente `isPlaceholder = true`. Nenhum dado de jogador/clube foi criado nesta entrega.
+## Simulação e comportamento
 
-## Origem e versões
+Time 0 = mandante/Aurora FC azul, índices0..10; time 1 = Horizonte AC vermelho,11..21. Goleiros 0/11. Todos fictícios, FootballConfig.IsPlaceholder=true, números1..11; nenhum elenco/rating/dado oficial foi inventado.
 
-- Repositório: https://github.com/YokiPJ/Wynnyng-six-seven . Estava vazio, sem commits, arquivos ou AGENTS.md na inspeção inicial.
-- Implementação preparada em `codex/phase-0-1a`.
-- Unity **6000.0.62f1**, revisão **f99f05b3e950**, versão confirmada na API pública de releases da Unity.
-- URP **17.0.4**, Input System **1.11.2**, Cinemachine **3.1.3**, uGUI **2.0.0** com TMP, Test Framework **1.4.5**.
-- Novo backend ativo: `activeInputHandler: 1`. Sem `UnityEngine.Input` legado, `.velocity`/`.drag` antigos ou namespace Cinemachine 2.
-- Correção após a primeira abertura do usuário: o manifest inicial tinha `com.unity.modules.screen-capture`, nome inválido. O correto é **`com.unity.modules.screencapture`**, versão 1.0.0. Os outros 23 módulos declarados foram conferidos nas páginas do manual Unity 6. O validador agora verifica nomes/versões de módulos e tem 4 testes de regressão Python executados na CI. Isso não equivale a resolver pacotes dentro do Editor.
-- Correção após o log de Play: TMP settings/fontes ausentes causaram `TMP_Settings.get_defaultFontAsset` e o HUD parcialmente inicializado repetiu `NullReferenceException` por frame. O log também confirmou tentativas de importar TMP em Play (`Cannot import package in play mode`). Orientar parar Play, importar **Window > TextMeshPro > Import TMP Essential Resources**, aguardar e preparar novamente. `TmpResources` usa `TMP_Settings.LoadDefaultSettings()` antes do getter da fonte; o bootstrap verifica dependências antes de criar o mundo, e o HUD só atualiza após inicialização completa. Preparação só informa Ready após confirmar a fonte.
-- Após a importação de TMP, o usuário mostrou HUD ativo com o campo ainda invisível. A pasta Rendering não aparece na árvore da screenshot, indício de preparação URP ausente; não foi possível ler Graphics/Quality no PC para confirmar a configuração. `RenderingResources` agora verifica a seleção efetiva (override de qualidade, depois Graphics) antes do startup visual. A câmera usa Base/renderer padrão, culling explícito e prepara o estado Cinemachine antes de habilitar seu Brain. Existe um teste gráfico de pixels; a correção visual ainda precisa ser executada/confirmada no Unity.
-- Manifest versionado. `packages-lock.json` será produzido pelo primeiro import no Editor, sem inventar uma resolução não executada.
+Jogadores: aceleração/frenagem/giro limitado, sprint/stamina, separação por raio, suporte de formação. A IA tática pensa a cada0,1s. Escolhe perseguidor por tempo estimado de interceptação, com horizonte tunável e chegada desacelerada; perseguidor corre para não oscilar atrás de uma bola mais rápida que o jog. Suporte desloca com a bola e posse. Ações: passe por alinhamento/progresso/espaço/risco; profundidade com previsão; lançamento; chute carregado assistido, erro seeded e spin limitado por direção normalizada; bote. CPU pode mirar um canto oposto ao goleiro. Goleiros se posicionam e rebatem/afastam; não possuem animação de mergulho/encaixe.
 
-## Estado de aceite
+A lógica lê a bola real antes de cada passo e retorna Teleport e/ou HasKick com posição/velocidade/spin. Drible são toques de velocidade cadenciados, sem parenting da bola. Core não integra PhysX nem promete determinismo entre plataformas. A avaliação swept de fronteira exige cruzamento de toda a esfera; contador de gol fica latched até reinício.
 
-Implementação das Fases 0/1A entregue em arquivos completos. O ambiente de desenvolvimento **não possuía o Unity Editor**.
+Relógio:300 s de bola em jogo para90min, dois tempos com troca de direção em halftime; pausas, gols e reposições adicionam tempo real. Gol inicia pequena pausa e saída do time que sofreu. Bola fora inicia **reposição de treino simplificada**, não lateral/escanteio/tiro de meta oficial. FullTime abre menu uma vez; Nova partida limpa placar/stats/stamina e preserva tuning da sessão.
 
-- Núcleo compilado com C# 9 e .NET Standard 2.1; testes compartilhados executados em .NET 8.
-- Verificação estrutural de GUIDs, asmdefs, ações e referências executada.
-- Sintaxe de todos os scripts verificada por Roslyn; isso não confere tipos/APIs do motor.
-- **Compilação no Unity, ausência de warnings no Editor, shaders, EditMode/PlayMode e desempenho permanecem pendentes de execução.** Não descrever como executados ou garantir 60 FPS.
-- Resultado e contagens finais: `docs/VALIDACAO.md`. Não substituir as evidências por suposições.
+## Entrada e modos
 
-## Abrir e testar
+InputActions Gameplay: Move,Shoot,Pass,Through,Lob,Sprint,Switch,Pause. Gamepad: analógico,Sul,Oeste,Norte,Leste,RT,LB,Start. Teclado: WASD/setas,J,K,I,L,Shift,Tab,Esc. Movimento relativo à câmera. Sem pad, teclado paraP1; com pad, ele controlaP1. Dois pads para modo2P. SeP2 desconectar, voltaCPU. CPU×CPU usa CpuHome=true; modo1P tem CpuHome=false/TwoPlayers=false.
 
-1. Unity Hub → Add project from disk → pasta com Assets/Packages/ProjectSettings.
-2. Abrir com 6000.0.62f1 e aguardar pacotes.
-3. Wynnyng → Preparar Fases 0 e 1A; aguardar Ready. Importa TMP Essential Resources do próprio pacote uGUI e cria assets de URP.
-4. Wynnyng → Abrir laboratorio Fase 1A → Play, Game 16:9.
-5. D-pad escolhe cenário, RB lança, Select/View repõe; teclado setas/Enter/R. Start/F1 abre controles.
-6. Window → General → Test Runner → Run All em EditMode e PlayMode.
+LocalInputHub tem cópia de asset por slot e filtros por dispositivo, overridesJSON no persistentDataPath, hotplug e rebind interativo. `HasDevice` permite fallback deP2. Esc também abre menu pelo Keyboard.current para acessibilidade com pad conectado; durante rebind ele cancela a captura em vez de abrir menu.
 
-Atalho novo: com o Play parado, **Wynnyng → Preparar e iniciar laboratorio** importa os recursos quando necessário, configura URP, abre a cena e entra em Play após Ready. Importação cancelada/falha cancela o início. Abertura normal pelo menu também verifica se o URP está configurado. Quando o HUD aparece sem campo, orientar a preparação e confirmar a pasta `Assets/Wynnyng/Rendering/`; não tratar HUD ou clock ativo como prova de renderização do mundo.
+Pausa altera Time.timeScale=0 e cancela cargas/buffers. Ao continuar, Shoot fica suprimido até soltar para impedir chute vindo de Submit no menu. Estado global anterior é restaurado ao destruir o bootstrap.
 
-Se estiver usando o ZIP inicial, corrigir essa única chave em `Packages/manifest.json` com o Editor fechado, salvar e reabrir. O erro de resolução foi observado em screenshot do usuário. Outra screenshot mostra `Untitled` com Main Camera/Directional Light: abrir a cena do laboratório pelo menu antes de esperar campo/bola. Não pedir reinstalação do Unity; a versão mostrada é a correta, 6000.0.62f1.
+## Tuning principal
 
-Menu de preparação é idempotente: preserva SOs/cena existentes e outras cenas de build. Cria assets de renderização em `Assets/Wynnyng/Rendering/`. Se esses assets ou recursos TMP ainda não existirem, executar o menu antes do Play. Não alterar projetos fora deste repositório.
+`Resources/Config/Football.asset` contém gameplay e aparência. Assets originais ficam preservados; bootstrap usa clone. Sliders escrevem somente na cópia e mantêm min/max e jog<=sprint.
 
-## Arquitetura e dependências
-
-```text
-Core                 (sem Unity; noEngineReferences)
-  ↑ Configuration    (SOs -> parâmetros/geometry do Core)
-  ↑ Input            (Core + Unity.InputSystem)
-  ↑ Presentation     (Core + Configuration + Input + CM3 + uGUI/TMP)
-  ↑ Runtime          (Core + Configuration + Input + Presentation)
-  ↑ Editor           (configuração e bootstrap + APIs do Editor/URP)
-Tests                (EditMode/PlayMode separados; excluídos de build normal)
-```
-
-O diagrama é uma ordem de camadas, não uma dependência de todas as camadas acima. Os `.asmdef` são a fonte exata; não criar ciclos. Namespace raiz `Wynnyng` com subnamespaces iguais às camadas.
-
-`Core` contém `Vec3`, `BallPhysics`, `PitchGeometry`, `BoundaryEvaluator`, `BoundaryTracker`, `MatchSession`, `SimulationClock`, `SeededRandom`, `EventChannel<T>` e interfaces. Não depende de MonoBehaviour, Time, Rigidbody, Input, UI ou dados de clubes. Os mesmos fontes são compilados em `tools/CoreLibrary/`.
-
-`MatchBootstrap` é a composition root. Carrega configs de Resources ou usa referências do Inspector; valida antes de construir. Cria mundo procedural, bola, sessão, eventos, entrada opcional e apresentação opcional. Um laboratório ativo por vez. Deve ficar na origem com escala 1. Salva/restaura timestep, limite de frames, gravidade, bounce threshold, simulationMode e vSync ao ser destruído. Se houver apresentação, exige URP efetivo; TMP só é exigido quando há HUD/entrada. `RenderingResources` respeita o override de qualidade, mesmo se ele não for URP; Graphics sozinho não garante que o renderer selecionado seja o correto.
-
-`MatchBootstrap.IsInitialized` é um commit de inicialização completa, incluindo o HUD quando habilitado; não depende apenas de a sessão existir. Em exceção, desativa/destrói o mundo parcial, libera os inputs/eventos, remove as referências da sessão/bola/HUD, restaura parâmetros globais e desabilita o componente. É possível configurar/corrigir e tentar `Initialize` novamente. `LaboratoryHud` recebe a fonte explicitamente; fica desabilitado até terminar e `Update`/menu também verificam `IsInitialized`. `TmpResources.TryGetDefaultFont` permite loaders opcionais para testar ausência sem apagar assets do usuário. Não chamar o getter estático da fonte antes de verificar os settings.
-
-`MatchBootstrap.FixedUpdate` consome comandos da bancada, amostra o resultado físico anterior, avança sessão/detector e aplica aceleração para o próximo solve do PhysX. Physics em `SimulationMode.FixedUpdate`, **1/60 s**. Detecção pode ser observada no próximo passo fixo; não depende de triggers. Rigidbody com `Interpolate` para renderização.
-
-`BallBody` adapta Rigidbody/colisores e aplica aceleração aerodinâmica em `ForceMode.Acceleration`. Gravidade pertence ao PhysX. `linearDamping = 0`; não duplicar arrasto nativo e arrasto quadrático. Magnus = coeficiente × spin(rad/s) × velocidade por produto vetorial. Rolamento age no plano XZ quando o raycast de chão e a velocidade vertical indicam contato.
-
-`RuntimeAssets` possui materiais, malhas e PhysicsMaterials criados no startup e os destrói junto do mundo. Usar `sharedMaterial`; não acessar `renderer.material` no loop. Listas/new são permitidos na construção, no menu e nos testes; não criar coleções no passo fixo ou LINQ no loop.
-
-## Convenções geométricas e regras atuais
-
-- Escala: metros; X largura, Z comprimento, Y altura. Centro = origem.
-- Campo: 105×68 m, definidos pelas bordas externas das linhas de limite. Gol: abertura livre 7,32×2,44 m; profundidade inicial 2,5 m.
-- Bola: raio 0,11 m, massa 0,43 kg. Sem collider extra na malha visual.
-- Chão layer 8 (`Ground`), gol layer 9 (`Goal`), bola layer 10 (`Ball`). `WorldLayers` documenta índices estruturais; `TagManager.asset` usa os mesmos nomes.
-- Gol/fim só quando centro passa de `halfLength + radius`; lateral quando passa de `halfWidth + radius`.
-- Calcula interseção do segmento anterior→atual com todos os planos; usa o primeiro plano. Altura e largura verificadas nesse instante, com esfera inteira dentro da abertura.
-- Tolerância de contato de 2 mm somente na abertura/chão, não no cruzamento da linha.
-- Detector fica travado depois de um evento até `ResetBall`; rebote na rede não pode contar outro gol.
-- Saída detectada não é reinício oficial. Bola reposta no centro depois de 3 s para facilitar testes, não para simular lateral/escanteio/tiro de meta.
-- Contadores +Z/−Z são do laboratório e não definem mandante/visitante. Direção de ataque por equipe pertence à Fase 2.
-
-## Eventos, RNG e logging
-
-`EventChannel<T>` tem capacidade fixa (`SimulationConfig.EventCapacity`). Inscrição duplicada é ignorada; canal cheio lança exceção; mudanças de inscrição/remoção e publicação recursiva durante dispatch são proibidas. O callback de diagnóstico apenas armazena status, programa reset e emite mensagem estática.
-
-`MatchSession` recebe `IRandomSource` e `IEventChannel<MatchEvent>` por construtor. `SeededRandom` usa xorshift32; seed zero tem substituição definida. RNG está pronto e injetado, mas os cenários da bancada não consomem aleatoriedade. Não alegar determinismo entre plataformas do PhysX.
-
-Logging por `IGameLog`/`UnityGameLog`, configurável no SO. Não formatar strings/emitir logs a cada passo. Desativar logs para medir GC/performance da integração.
-
-## Entrada e remapeamento
-
-`Resources/Input/Match.inputactions`: mapas Gameplay e Laboratory, grupos Gamepad e Keyboard, IDs estáveis. Um clone de InputActionAsset por slot local; filtro de devices separado; dois slots. Dispositivos ainda conectados são preservados; novos pads ocupam slots vagos; teclado só é fallback de P1. P2 sem pad gera comando neutro.
-
-Gameplay preparado: Move, Shoot, Pass, Through, Lob, Sprint, Switch, Pause. `PlayerCommand` não conhece o motor. **É snapshot do frame de entrada**: a Fase 1B deve adicionar buffering/consumo de bordas uma única vez no passo fixo, evitando repetição quando houver vários FixedUpdate no mesmo frame.
-
-Menu diagnóstico permite rebind por comando e jogador, incluindo partes WASD. Captura somente o dispositivo do slot. Overrides persistem em JSON por jogador no `persistentDataPath`; não salvar em Assets. Cancelar com Esc; botão Padrao restaura. Eventos de hotplug e mudanças de menu podem alocar; o loop estável não cria clones/arrays.
-
-## Configurações e tuning
-
-Todos em `Assets/Wynnyng/Resources/Config/`; editar fora do Play nesta fase.
-
-| SO | Principais valores |
+| Valores iniciais | Uso |
 |---|---|
-| Simulation | 60 Hz; render target 60; máximo frame 0,1 s; gravity (0,−9,81,0); seed 2026; solver 8/4; bounce threshold 0,2 |
-| Pitch | 105×68; gol 7,32×2,44; poste raio 0,06; tolerância 0,002; linhas 0,12; círculos 96 segmentos; net spacing 0,25 |
-| Ball | massa 0,43; raio 0,11; Cd 0,25; densidade 1,225; Magnus 0,0015; restituição 0,65; atrito contato 0,18; rolamento 0,015; angular damping 0,05 |
-| Presentation | visão (78,72,0) olhando origem, FOV 68; auto reset 3 s; marcador 0,7 m; 8 cenários com posição/velocidade/spin configuráveis |
+| Jog5,2 / sprint9 / acel16 / freio20 | Peso e resposta |
+| Turn8 rad/s; stamina dreno0,055 / regen0,035 | Giro, fadiga |
+| DribbleLead0,85m; interval0,12s; correction8 | Proximidade/controle da bola |
+| Passe12..22 m/s; cone±30°; lead0,35 / through1,1s | Assistência e recepção |
+| Chute18..32 m/s; charge0,95s; spin22; erro0,045rad | Potência/curva |
+| AIdecision0,1s; reaction0,22s; intercept3s; arrival1,8m | Perseguição e chegada |
+| Pressão3,2m; tacklechance0,25; passinterval3,6s | Ritmo da CPU |
+| Keeperreach2,4m; height2,8m; clear24 m/s | Rebatidas simplificadas |
+| Câmeraoffset(42,36,0); FOV55; damping4 | Leitura da ação |
 
-`BallBody` captura parâmetros aerodinâmicos na inicialização. Mudanças ao vivo de SO não são um painel de tuning confiável nesta entrega. Na Fase 1B, usar cópias de configuração em runtime e atualizar explicitamente os parâmetros do adaptador, sem gravar tuning de teste nos assets por acidente.
+SO Ball preserva massa0,43/raio0,11/Cd0,25/Magnus0,0015/restituição0,65/rolamento0,015. Pitch105×68/gol7,32×2,44. Simulation controla solver/fixed/gravity. Configurações fora de sliders exigem parar o Play e editarSO.
 
-Dimensões, contatos e velocidades são tuning; 0/1, metade/diâmetro, índices de topologia, π e constantes do algoritmo RNG são relações/estrutura matemática, não números de gameplay escondidos.
+## Windows e atualização
 
-## Sistemas e fases
+`GERAR_E_JOGAR.exe` consulta branch→SHA, baixaZIP fixo com validação de caminhos, armazenaLocalAppData/Wynnyng/versions/<sha>, preserva clone e chama tools/Build-and-Play.ps1. Atualização é pelo preparador; atalho Jogar Wynnyng abre player de uma revisão já gerada. Novo banner menciona dois times/CPU; o preparador antigo também baixa o projeto atual.
 
-| Sistema | Estado |
-|---|---|
-| Pastas/asmdefs/configs/bootstrap/eventos/RNG/logging | Implementado; compilação do motor pendente |
-| Input Actions, dois slots e overrides JSON | Implementado; validar dispositivos físicos |
-| Campo/linhas/gols/redes procedurais | Implementado; inspeção visual/colisão pendente |
-| Bola: Rigidbody/CCD/interpolação/arrasto/Magnus/quique/rolamento | Implementado; PlayMode e tuning no Unity pendentes |
-| Gol/fora/latch/reset | Lógica pura testada; integração física pendente |
-| Bancada e menu de remapeamento | Implementados como diagnóstico; não são HUD final |
-| Jogador, passe, chute, Wide seguindo bola, sliders runtime | **Fase 1B: não iniciar sem “próxima”** |
-| 22 jogadores, IA, goleiro, troca, stamina/estatísticas | Fase 2 |
-| Regras, árbitro, impedimento, faltas, bolas paradas, substituições | Fase 3 |
-| Pipeline Blender, modelos/animações, kits, estádio, torcida | Fase 4 |
-| HUD/menus finais, replay, áudio e câmeras extras | Fase 5 |
-| Clubes/elencos CSV, competição Série A 2026, tabela, calendário, save | Fase 6 |
-| Carreira e edição | Fase 7 |
-| Balanceamento, performance, build e QA | Fase 8 |
+Pipeline:prepare→EditMode→PlayMode→BuildPlayer StandaloneWindows64/Mono. WindowsBuild usa MatchScenePath exclusivamente; prepara SO Football, TMP, URP e cenas. Exige BuildReport sem erros +EXE/UnityPlayer.dll/_Data; escreve work/WindowsBuild/build-result.json, cria atalho e abre player. Logs têm progresso20s e erros C# extraídos.
 
-## Limitações e próximo trabalho autorizado
+GateXML aceita apenas o teste gráfico antigo ignorado em batch (nome/motivo exatos). Verifica casos/suítes, inclusive falha de teardown; outros ignores/inconclusivos/falhas ou zero aprovados bloqueiam. Nunca usar SkipTests para esconder uma falha nova. CIWindows valida PowerShell 7 e5.1, compila/testa preparador; não executa Unity.
 
-O projeto ainda não contém um jogo 11×11, nem elenco/rating oficial ou placeholder: esses dados pertencem às fases de times/competição. A lista de 20 clubes fornecida pelo usuário é um seed a conferir em fonte oficial quando a fase de dados chegar. Não afirmar que ela foi verificada nesta fase.
+## Testes e evidências
 
-Redes rígidas e traves com cápsulas são blockout. Vista geral Cinemachine fixa serve para ver o campo inteiro; a bola de 22 cm tem um marcador no chão para ser visível à distância. Shaders HLSL são originais e sem marcas. TMP usa recursos fornecidos pelo próprio Unity, importados pelo comando de preparação.
+Executado localmente: **69 testes .NET aprovados**. Inclui23 casos FootballCore,3buffer,41Core anteriores e2checks alocação. CPU×CPU por600 s com integrador simplificado:0:0, chutes3:0, passes222:238, defesas0:2, posse117,277s:132,645s. Evidência de progresso/estabilidade, **não de balanceamento bom**; volume de finalizações baixo é risco conhecido. Cada loop medido de60.000 passos, após aquecimento, alocou0 bytes gerenciados na thread. Não cobre Unity/PhysX/CM/TMP/UI/render.
 
-Antes de declarar aceite 0/1A: abrir no Editor correto; preparar; corrigir eventuais erros/warnings reais; rodar EditMode/PlayMode; verificar os oito cenários; medir a integração no Profiler e num PC representativo. **Não contornar essa pendência dizendo que teste .NET valida Rigidbody, shaders ou FPS.**
+Preparados, **não executados aqui**:92 casos UnityEditMode e20PlayMode (19executáveis no batch,1pixel ignorado). Novos PlayMode verificam22corpos/bola física, movimentoCPU, gol único/reinício, pausa/restauração de globais, tuning isolado e apresentação/menu. Fixtures removem ambos os tipos de bootstrap antes de criar o seu para evitar cenas sobrepostas.
 
-Após a correção de TMP, são esperados **47 casos EditMode** e **12 testes PlayMode**, incluindo apresentação completa, falha de HUD sem spam e recuperação do bootstrap. Os testes novos dependem do Unity e foram preparados, não executados neste ambiente. O núcleo permanece com 42 testes headless. A importação manual precisa terminar antes do Play; não interpretar o erro antigo de pacote ainda visível na Console como prova de uma nova falha sem limpar/reproduzir.
+Checklist:ver22atletas/câmera/cores; mover/sprint/passe/chute/troca; CPU atacar/goleiro rebater; gol/reinício/saída; pausa congela; sliders/rebind; dois controles/hotplug; halftime/fulltime/NovaPartida; saída/reabertura; medirGPU/GC/FPS no player. Não registrar aceite Unity sem executar.
 
-Após a proteção de URP, o total preparado é **49 casos EditMode e 13 PlayMode**. O teste gráfico compara pixels de quatro pontos de gramado ao fundo da câmera, com Game visível; é ignorado em batch/nographics, pois precisa de renderização real. Não declarar esse teste como passado usando os resultados headless. A confirmação visual do usuário e o teste no Editor seguem pendentes.
+## Histórico de falhas preservadas como regressões
 
-Quando o usuário disser “próxima”, implementar apenas 1B: jogador com inércia, passe, chute, câmera Wide ponderada e sliders runtime, preservando todos os contratos/testes anteriores e atualizando este HANDOFF.
+- Pacote:screen-capture→screencapture; validador de módulos mantém correção.
+- TMP ausente:preflight antes de construirHUD; nenhuma atualização parcial/spam. Importar foraPlay.
+- Campo invisível:guardaURP efetivo e inicialização da câmera antesBrain; usuário confirmou campo no player anterior.
+- TagManager: layers vazios explicitamente strings, índicesGround8/Goal9/Ball10; validadorYAML/duplicatas/schema.
+- CS0266 BuildSummary:errors/warnings sãoint, não uint, corrigido.
+- AgregadoSkipped:Ignored:reprodução com DLL NUnit oficial mostrou13 aprovados+1ignorado; gate verifica folhas em vez de bloquear apenasagregado.
+- NovaIA:no primeiro teste de 600 s não finalizava; perseguidores agora antecipaminterceptação, correm e desaceleram na chegada. O teste deprogresso permaneceuobrigatório.
+
+## Pendências e limites
+
+Não há regras completas/árbitro/impedimento/faltas/cartões/substituições; replays; áudio; modelos rigados/animaçãoHumanoid; estádio/torcida final; dadosBrasileirão/calendário/save/carreira/edição. Arte é blockout original, shaders unlit; goleiro/defesa/IA são simplificados. Sem Blender/Mixamo necessário. Não prometer60FPS na GTX 1060 sem medição, nem chamar preparador de player pronto.
+
+Próximo trabalho deve partir da partida atual, testar no Unity real, corrigir erros observados e balancear ritmo/finalizações/posse antes de expandir modos ou arte. Usuário quer jogar e atualizar sem colar scripts; manter mesmo preparador e defaults prontos.

@@ -91,7 +91,7 @@ namespace Wynnyng.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
                 BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
-                    scenes = new[] { ProjectPreparation.ScenePath },
+                    scenes = new[] { ProjectPreparation.MatchScenePath },
                     target = BuildTarget.StandaloneWindows64,
                     locationPathName = outputPath,
                     options = BuildOptions.StrictMode
@@ -139,7 +139,7 @@ namespace Wynnyng.Editor
             lastReceipt = receipt;
             receipt.unityVersion = Application.unityVersion;
             receipt.outputPath = outputPath ?? "";
-            receipt.scene = ProjectPreparation.ScenePath;
+            receipt.scene = ProjectPreparation.MatchScenePath;
             string path = Path.Combine(ProjectRoot, ReceiptRelativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllText(path, JsonUtility.ToJson(receipt, true));

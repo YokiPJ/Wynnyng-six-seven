@@ -14,5 +14,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <ProjectReference Include="../CoreLibrary/Wynnyng.Core.csproj" />
     <Compile Include="../../Assets/Wynnyng/Tests/EditMode/CoreTests.cs" Link="CoreTests.cs" />
+    <Compile Include="../../Assets/Wynnyng/Tests/EditMode/FootballCoreTests.cs" Link="FootballCoreTests.cs" />
+    <Compile Include="../../Assets/Wynnyng/Tests/EditMode/PlayerCommandBufferTests.cs" Link="PlayerCommandBufferTests.cs" />
   </ItemGroup>
 </Project>

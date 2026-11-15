@@ -27,7 +27,7 @@ internal static class Program
         Console.OutputEncoding = Encoding.UTF8;
         if (arguments.Length == 1 && arguments[0] == "--self-test") return SelfTest();
         Console.WriteLine("WYNNYNG - atualizar, testar, gerar e jogar");
-        Console.WriteLine("Preparador do prototipo de campo e bola. O jogo Unity sera gerado no seu PC.");
+        Console.WriteLine("Partida de teste com dois times e CPU. O jogo Unity sera gerado no seu PC.");
         try
         {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)

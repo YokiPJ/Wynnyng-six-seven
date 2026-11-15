@@ -193,7 +193,7 @@ try {
         $shortcut = $shell.CreateShortcut((Join-Path $desktopPath 'Jogar Wynnyng.lnk'))
         $shortcut.TargetPath = $gamePath
         $shortcut.WorkingDirectory = Split-Path -Parent $gamePath
-        $shortcut.Description = 'Prototipo Wynnyng - campo e bola'
+        $shortcut.Description = 'Wynnyng - partida de teste contra a CPU'
         $shortcut.Save()
     }
 }

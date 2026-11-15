@@ -26,7 +26,9 @@ namespace Wynnyng.Tests.PlayMode
             // Tests own their laboratory and work even when the user starts from Phase01A.
             MatchBootstrap[] previous = Object.FindObjectsByType<MatchBootstrap>(FindObjectsSortMode.None);
             for (int i = 0; i < previous.Length; i++) Object.Destroy(previous[i].gameObject);
-            if (previous.Length > 0) yield return null;
+            FootballBootstrap[] matches = Object.FindObjectsByType<FootballBootstrap>(FindObjectsSortMode.None);
+            for (int i = 0; i < matches.Length; i++) Object.Destroy(matches[i].gameObject);
+            if (previous.Length + matches.Length > 0) yield return null;
             simulation = ScriptableObject.CreateInstance<SimulationConfig>(); simulation.EnableLogging = false;
             pitch = ScriptableObject.CreateInstance<PitchConfig>();
             ball = ScriptableObject.CreateInstance<BallConfig>();

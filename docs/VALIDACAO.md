@@ -1,110 +1,60 @@
-# Validação da entrega — Fases 0 + 1A
+# Validação — partida contra a CPU
 
-## Executado neste ambiente
+## Executado no ambiente de desenvolvimento
 
-Ambiente Linux, .NET SDK **8.0.428**, sem Unity Editor instalado/licenciado. Inspeção inicial do repositório remoto: vazio, sem commits. Todos os arquivos desta entrega são novos.
+Linux, SDK .NET 8.0.428, PowerShell 7.4.6, **sem Editor/licença Unity**.
 
-| Verificação | Resultado real |
+| Verificação | Evidência |
 |---|---|
-| Compilação do núcleo | **Passou**, C# 9, .NET Standard 2.1, warnings tratados como erros |
-| Testes do núcleo em .NET 8 | **42 passaram, 0 falhas, 0 ignorados** |
-| Alocação do núcleo após aquecimento | **0 bytes gerenciados** em 60.000 passos, incluindo física pura, sessão, RNG e publicação de eventos |
-| Sintaxe dos scripts de Assets | **29 arquivos**, verificação Roslyn/C# 9; não verifica tipos do motor |
-| Estrutura do projeto | **60 GUIDs**, 8 assemblies sem ciclos, **69 arquivos YAML** e referências verificadas |
-| Regressões Python | **13 passaram**, incluindo o formato inválido do TagManager e schema de layers |
-| Script de build | AST e testes de quoting, descoberta e gates XML passaram em PowerShell 7.4.6; sem executar Unity |
-| Preparador Windows | Compilado .NET Framework 4.8 sem warnings/erros; self-tests de quoting, ZIP traversal e recibo passaram; não é o player Unity |
-| APIs antigas / código incompleto | Sem usos de Input legado, `FindObjectOfType`, `FindObjectsOfType`, LINQ ou marcadores de implementação pendente nos scripts |
-| Espaços/diff | `git diff --check` sem problemas; verificação repetida após adicionar os arquivos ao índice |
+| Core sem motor | Compila C# 9/.NETStandard 2.1 com warnings como erros |
+| Testes .NET | **69 aprovados, zero falhas/ignorados** |
+| CPU × CPU | 600 s simulados com integrador de bola simplificado; posições/stamina finitas, passes/finalizações e contagens verificadas |
+| Alocação do Core | Dois testes de60.000 passos após aquecimento:0 bytes gerenciados na thread; um laboratório e outro partida com22 jogadores |
+| Sintaxe Assets | Roslyn/C# 9:43 arquivos,0 erros; não é verificação de tipos do motor |
+| Estrutura |76GUIDs únicos,8assemblies sem ciclos,87YAMLs verificados |
+| Preparador | .NET Framework 4.8 recompilado:0 erros/0 warnings; testes de argumentos,ZIP,recibo e gates separados do Unity |
 
-Os 42 testes incluem **41 casos compartilhados com o EditMode** e **1 teste adicional de alocação** do runner .NET. O teste de alocação não cobre PhysX, renderização, Input System, logging interno do Editor ou o funcionamento interno do TMP/uGUI.
+O teste de600 s produziu, com seed2026: **0:0**, chutes3:0, passes222:238, defesas0:2, posse117,277s:132,645s. Isso comprova que houve ações e que o loop não travou, sem esconder o volume baixo de chutes e a circulação excessiva como risco de balanceamento. Não usar esse resultado como prova de boa jogabilidade ou PhysX equivalente.
 
-Comandos reproduzíveis:
+Na primeira execução desse teste, a IA não finalizou. A correção preservou a asserção de finalização: perseguidor passa a ser escolhido por interceptação prevista, corre até aproximar e desacelera ao chegar. O teste passou depois da correção. Também foi normalizado o vetor usado no spin do chute, evitando curva multiplicada pela distância do alvo da CPU.
+
+Comandos:
 
 ```sh
+python3 -m pip install -r tools/requirements-validation.txt
 python3 tools/validate_project.py
 python3 -m unittest discover -s tools -p 'test_*.py'
-dotnet test tools/HeadlessChecks/HeadlessChecks.csproj --configuration Release
+dotnet test tools/HeadlessChecks/HeadlessChecks.csproj -c Release
+pwsh -File tools/Test-BuildPipeline.ps1
 ```
 
-A CI em `.github/workflows/core-tests.yml` também executou com **sucesso** no GitHub: [Core CSharp tests, execução 43674594509](https://github.com/YokiPJ/Wynnyng-six-seven/actions/runs/43674594509), referente ao commit de código `94017c7d4df46b2b4788ff29a020bd02b66194ca`. O XML TRX fica no artefato `core-test-results` dessa execução. Essa CI não exige licença Unity e não executa o motor.
+## Preparado para executar no Unity
 
-## Correção após a abertura do usuário
+- **92 casos EditMode**:61 anteriores,23FootballCore,3buffer e5config/buildscene.
+- **20 PlayMode**:14 anteriores e6 da partida. O teste antigo de pixels exige Editor gráfico e é o único ignore permitido no batch.
+- Os novos casos de integração verificam22 jogadores,2goleiros, bola dinâmica/CCD, progressoCPU, gol único/reinício, pausa/restauração do tempo, tuning isolado e HUD/câmera/menu.
+- As fixtures limpam laboratórios e partidas anteriores para não sobrepor mundos/física/configurações globais.
 
-O screenshot de **Package Manager Error** confirmou uma falha do manifest inicial: `com.unity.modules.screen-capture@1.0.0` não existe. Foi corrigido para [`com.unity.modules.screencapture@1.0.0`](https://docs.unity3d.com/6000.0/Documentation/Manual/com.unity.modules.screencapture.html).
+**Esses testes do motor não foram executados aqui.** O log do usuário confirmou61EditMode aprovados na versão anteriorf6a28cc; isso não valida os arquivos novos. O novo preparador executa novamente os testes Unity antes de gerar o player no PC.
 
-As páginas do manual Unity 6 dos outros 23 módulos declarados foram consultadas e existem sob os nomes usados. Isso confirma nomenclatura; a resolução efetiva dentro do Editor continua sendo um aceite separado. A CI anterior verificava somente os cinco pacotes principais, sem verificar os nomes dos módulos embutidos, e por isso deixou o erro passar.
+## Build e CI
 
-O validador agora inclui nomes e versões dos módulos. Quatro testes Python verificam a rejeição do erro original, a aceitação do nome correto, uma versão inválida e o manifest entregue. O README descreve a correção local de uma linha e como abrir a cena certa após a resolução dos pacotes. Nenhum sistema da Fase 1B foi iniciado.
+A cena padrão do build é `Assets/Wynnyng/Scenes/FootballMatch.unity`. O laboratório continua na lista do Editor para diagnóstico, mas WindowsBuild fornece somente a cena da partida a BuildPipeline. O preparador exige recibo de sucesso e arquivos completos antes de abrir.
 
-## Correção após o log de inicialização do usuário
+A CI verifica estrutura/Python/Core no Linux e scripts/preparador no Windows, inclusive PowerShell 7 eWindowsPowerShell 5.1. **Não tem Unity/licença e não gera o jogo Unity.** O artefato Windows da CI é o preparador.
 
-O log enviado confirmou: settings/fontes TMP ausentes; exceção no getter estático `TMP_Settings.defaultFontAsset`; 1.619 erros subsequentes em `LaboratoryHud.Update`; e quatro tentativas de importar o pacote durante Play. A ausência de TMP e a falta de proteção contra atualização de um HUD parcial são falhas distintas, ambas tratadas nesta correção.
+## Checklist no player
 
-- `TmpResources` carrega os settings pela API null-safe `LoadDefaultSettings` e só depois lê a fonte. A assinatura foi conferida nas fontes oficiais uGUI/TMP.
-- O bootstrap verifica TMP antes de criar objetos ou alterar configurações globais. `IsInitialized` só é verdadeiro depois da inicialização completa; exceções liberam o mundo parcial e restauram os globais.
-- O HUD recebe a fonte por parâmetro e não atualiza nem abre menus antes de concluir a construção.
-- A preparação aguarda a importação e confirma a fonte antes da mensagem Ready. Abrir o laboratório por menu com recursos ausentes inicia a preparação em vez de abrir uma cena que já falharia.
-- Três novos casos EditMode cobrem settings ausentes sem chamar o getter, fonte ausente e recursos preparados. Três novos PlayMode cobrem HUD rejeitado sem erros por frame, apresentação completa/câmera e nova tentativa do bootstrap após falha.
+1. Confirmar22 jogadores/cores/seleção/câmera e adversárioCPU.
+2. Mover/correr/passar/profundidade/lançamento/chutecarregado/trocar.
+3. Conferir goleiro, placar, reposição de treino e troca de lados.
+4. Pausar e verificar congelamento de relógio/bola; continuar sem chute involuntário.
+5. Testar sliders/rebind, CPUdemo, dois controles e desconexão deP2.
+6. Completar partida e Nova partida; fechar/reabrir.
+7. Executar o teste de pixels no Editor com Game visível e medir GC/FPS/GPU no Windows.
 
-Os novos testes de Unity foram escritos e verificados sintaticamente, mas **não foram executados neste ambiente**. A solução imediata para a cópia do usuário é parar o Play, importar TMP Essential Resources, aguardar e preparar novamente. A renderização e o restante do aceite precisam de nova execução no Editor.
+## Regressões anteriores mantidas
 
-## HUD ativo com campo invisível
+Manifest corrigido para `com.unity.modules.screencapture`; TMP/URP verificados antes de construir o mundo; HUD parcial não atualiza; TagManager com32layers string; configs rejeitamNaN/Infinity; contadores BuildSummary como int; erros reais extraídos do log; agregadoNUnit Ignored aceito somente para o caso visual previsto. A correção do parser foi reproduzida com o DLL oficial ext.nunit 2.0.3.
 
-A screenshot seguinte mostra o HUD/clock ativos e apenas o fundo da câmera. A árvore de pastas não mostra Rendering, criada pela preparação, o que sugere URP ainda não configurado. Essa hipótese não foi confirmada por leitura das configurações Graphics/Quality no PC do usuário.
-
-- O startup agora exige um UniversalRenderPipelineAsset efetivo antes de criar a apresentação. Considera overrides de qualidade e orienta executar a preparação se o pipeline estiver ausente/incompatível.
-- A câmera recebe configuração explícita de perspectiva, culling, Base e renderer. Cinemachine é inicializado antes de ativar o Brain usando APIs públicas de 3.1.3.
-- O menu Preparar e iniciar laboratorio encadeia importação/preparação, abertura da cena e Play depois da confirmação de recursos.
-- Dois testes EditMode verificam pipeline ausente e configuração preparada. Um PlayMode gráfico compara a imagem do gramado ao fundo em quatro posições, para não aceitar apenas o HUD como prova de renderização 3D. Ele é ignorado em batch/nographics e exige Game visível.
-
-**Os testes do motor e de pixels continuam não executados aqui.** A verificação de sintaxe/estrutura e a CI do núcleo não comprovam que o campo foi renderizado.
-
-## TagManager e geração Windows
-
-A revisão `34066babc30fb89385c281ddc2bdd5a8d2370156` passou na [CI 43686154472](https://github.com/YokiPJ/Wynnyng-six-seven/actions/runs/43686154472): testes de núcleo/validação no Linux e compilação/testes do preparador no Windows. O binário entregue e uma compilação nova foram executados com `--self-test` em Windows. Nenhum desses jobs executou o Editor Unity ou um player do jogo.
-
-O erro de parse mostrado na linha 41 do TagManager ocorreu com entradas de layer vazias como `  -`. Elas foram substituídas por strings explícitas `  - ""`. A validação passa pelos arquivos de settings/assets/cena/metas e rejeita esse formato, chaves repetidas e mudanças dos índices de layers. Os outros arquivos YAML presentes passaram nessa verificação genérica.
-
-Foram reforçadas as configurações não finitas e o contrato de transform do bootstrap, além do botão Sair. O pipeline Windows prepara, testa e usa BuildPipeline, mas precisa do Editor instalado/ativado no PC. O preparador `GERAR_E_JOGAR.exe` baixa a revisão atual e automatiza essas etapas. **Não há player do jogo gerado neste ambiente**, pois não há Unity nem licença disponível. Os testes da CI Windows são do preparador/scripts.
-
-## Preparado, sem execução neste ambiente
-
-O log enviado pelo usuário depois da entrega identificou **CS0266** no gerador: os contadores `int` de `BuildSummary` eram atribuídos a campos `uint` do recibo. A etapa de preparação não chegou a executar seu método, pois a compilação dos scripts falhou. Corrigidos os campos para `int` e adicionado diagnóstico do log na janela do preparador, com teste de extração/deduplicação da mensagem real. Essa correção resolve os dois erros de tipo observados; não é evidência de um build completo do player.
-
-| Aceite | Como verificar |
-|---|---|
-| Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |
-| Resolução efetiva dos pacotes | Package Manager; primeiro import gera `packages-lock.json` |
-| EditMode | Usuário confirmou 61 aprovados na revisão f6a28cc; repetir após mudanças no motor |
-| PlayMode | Test Runner: 14 testes, incluindo transform inválido e um caso gráfico ignorado em batch |
-| Player Windows | O preparador gera no PC usando o Unity instalado; não foi gerado/executado aqui |
-| HLSL, materiais e layout da interface | Inspeção em Play no Editor com renderização habilitada |
-| Hotplug, remapeamento e dois controles físicos | Checklist manual do README |
-| 60 FPS / GTX 1060 / GC da integração | Development Build Windows e Profiler após aquecimento |
-
-**O aceite do Unity permanece aberto.** Testes .NET e inspeção de fontes não equivalem a compilar/executar o projeto no Editor. Não há medição de GPU, draw calls, FPS ou PhysX feita nesta entrega.
-
-## Agregado PlayMode ignorado
-
-O console da revisão `f6a28cc` enviado pelo usuário confirmou preparação concluída (290 s), EditMode com **61 aprovados** (25 s) e PlayMode com 14 casos/agregado `Skipped:Ignored` (35 s). A geração parou na leitura do XML, antes do build. Sem o XML individual não se conclui que os 13 casos físicos passaram.
-
-Uma reprodução local usando o DLL oficial de `com.unity.ext.nunit` **2.0.3**, dependência do Test Framework **1.4.5**, confirmou que adicionar 13 resultados aprovados e um ignorado a uma suíte produz exatamente `Skipped:Ignored`, 13 passados, 1 ignorado e 0 falhas. A reprodução monta resultados NUnit; não executa Unity nem os testes do projeto.
-
-Corrigida a validação PowerShell: aceita apenas o caso gráfico conhecido com nome, estado e motivo exatos; verifica todos os casos e suítes; rejeita outros ignores, inconclusivos, ausência de aprovações e falhas mesmo em suítes cujas folhas passaram. Testes de regressão cobrem esse agregado e a apresentação do nome/motivo de erros. Os testes locais do script passaram em PowerShell 7.4.6. A CI Windows executa o mesmo conjunto em PowerShell 7 e Windows PowerShell 5.1. A confirmação do build e do player no PC continua pendente.
-
-## APIs conferidas em fontes oficiais
-
-As assinaturas principais foram consultadas; as fontes das branches oficiais podem evoluir. Isso reduz risco de API inventada, mas não substitui a compilação com os binários do alvo.
-
-- Versão/revisão do Editor: [API de releases Unity 6000.0.62f1](https://services.api.unity.com/unity/editor/release/v1/releases?version=6000.0.62f1&limit=1).
-- `Rigidbody.linearVelocity`, `linearDamping`, `angularDamping`: [UnityCsReference, Rigidbody](https://github.com/Unity-Technologies/UnityCsReference/blob/6000.0/Modules/Physics/ScriptBindings/Rigidbody.bindings.cs).
-- `PhysicsMaterial` e `PhysicsMaterialCombine`: [UnityCsReference, PhysicsMaterial](https://github.com/Unity-Technologies/UnityCsReference/blob/6000.0/Modules/Physics/ScriptBindings/PhysicsMaterial.bindings.cs).
-- `SimulationMode.FixedUpdate`: [UnityCsReference, Physics](https://github.com/Unity-Technologies/UnityCsReference/blob/6000.0/Modules/Physics/ScriptBindings/Physics.bindings.cs).
-- `GraphicsSettings.defaultRenderPipeline`: [UnityCsReference, GraphicsSettings](https://github.com/Unity-Technologies/UnityCsReference/blob/6000.0/Runtime/Export/Graphics/GraphicsSettings.bindings.cs).
-- `UniversalRenderPipelineAsset.Create`, `msaaSampleCount`, `shadowCascadeCount`, `useSRPBatcher`: [URP 6000.0](https://github.com/Unity-Technologies/Graphics/blob/6000.0/staging/Packages/com.unity.render-pipelines.universal/Runtime/Data/UniversalRenderPipelineAsset.cs).
-- `CinemachineCamera.Lens` e `Unity.Cinemachine`: fontes do [pacote oficial Cinemachine 3.1.3](https://download.packages.unity.com/com.unity.cinemachine/-/com.unity.cinemachine-3.1.3.tgz), consultadas fora do projeto.
-- Rebinding, filtros de devices e `InputSystemUIInputModule.AssignDefaultActions`: fontes do [pacote oficial Input System 1.11.2](https://download.packages.unity.com/com.unity.inputsystem/-/com.unity.inputsystem-1.11.2.tgz), consultadas fora do projeto.
-- Overloads de `TMP_Text.SetText`: [fontes oficiais uGUI/TMP](https://github.com/Unity-Technologies/uGUI/blob/6000.0/com.unity.ugui/Runtime/TMP/TMP_Text.cs).
-
-As fontes consultadas não foram copiadas para o repositório. A entrega usa APIs públicas e implementação própria de simulação, geometria e integração.
+Limitações: campo/atletas procedurais sem animaçãoHumanoid, regras/reinícios simplificados e IA em balanceamento. Não há medição de60FPS/GTX1060, inspeção do novo HUD no player, teste de gamepad físico ou execução PhysX feita neste ambiente.

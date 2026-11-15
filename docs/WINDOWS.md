@@ -1,51 +1,44 @@
-# Windows: atualizar, testar, gerar e jogar
+# Windows — atualizar e jogar a partida
 
-Esta entrega estabiliza o protótipo de campo e bola das Fases 0/1A. Ainda não contém jogador controlável ou uma partida 11×11.
+1. Feche o player antigo e todas as janelas do Unity.
+2. Abra `GERAR_E_JOGAR.exe`. O mesmo arquivo já baixado busca o HEAD atual da branch `codex/phase-0-1a`.
+3. Aguarde preparação, EditMode, PlayMode e build. O jogo abre quando tudo conclui.
 
-## Uso simples
+O preparador gera a partida **Aurora FC × Horizonte AC**, com 11 jogadores por time e adversário CPU. O novo player começa em `FootballMatch.unity`; o laboratório antigo continua no projeto para diagnóstico.
 
-1. Feche as janelas do Unity.
-2. Baixe e abra `GERAR_E_JOGAR.exe` deste repositório.
-3. Aguarde a preparação, os testes e a compilação. O jogo abre no sucesso.
+**O EXE entregue é um preparador .NET Framework 4.8, não um player Unity pré-compilado.** O player é compilado no seu PC com Unity **6000.0.62f1** instalado/ativado e Windows Build Support (Mono). A primeira execução precisa de internet e pode levar vários minutos para importar pacotes. A janela informa a etapa, o tempo e o caminho do log.
 
-**`GERAR_E_JOGAR.exe` é o preparador Windows, não um player Unity já compilado.** Ele usa o Unity **6000.0.62f1** instalado e ativado no seu computador, com suporte de build Windows Mono. Na primeira execução, precisa de internet. Não exige SDK .NET para o usuário; o preparador usa .NET Framework 4.8 do Windows.
+O download usa um SHA fixo em `%LOCALAPPDATA%/Wynnyng/versions/<sha>/`; o clone original permanece preservado. Na mesma revisão, um player completo com recibo de sucesso é aberto diretamente. Uma revisão nova passa novamente por preparação/testes/build.
 
-O preparador consulta a branch `codex/phase-0-1a`, baixa uma revisão fixa por SHA e mantém cada versão em `%LOCALAPPDATA%/Wynnyng/versions/<sha>/`. O clone original permanece preservado. Na mesma revisão, um player já gerado com relatório de sucesso é aberto diretamente.
+## Arquivos gerados
 
-## O que é feito automaticamente
+- Player: `Builds/Windows/Wynnyng.exe`, acompanhado de `UnityPlayer.dll` e `Wynnyng_Data`.
+- Atalho: **Jogar Wynnyng**, na área de trabalho, aponta para o player dessa revisão.
+- Logs/relatórios: `work/WindowsBuild/prepare.log`, `EditMode.log/.xml`, `PlayMode.log/.xml`, `build.log`, `build-result.json`.
 
-1. Preparação do projeto: TMP Essential Resources, URP, cenas e configurações.
-2. Testes Unity **EditMode**. Um XML sem casos aprovados ou com falhas interrompe a geração.
-3. Testes Unity **PlayMode**, também com verificação de saída e XML.
-4. Build Windows x86_64/Mono pelo `BuildPipeline.BuildPlayer`, com verificação de resultado, erros, EXE, `UnityPlayer.dll` e pasta `_Data`.
-5. Criação do atalho **Jogar Wynnyng** na área de trabalho, quando ela estiver disponível, e abertura do jogo.
+Use o preparador para atualizar; o atalho abre a revisão já instalada. Mantenha toda a pasta do player, não só o EXE.
 
-O teste de pixels exige Editor gráfico/Game visível e é ignorado no batch. O NUnit usado pelo Unity pode marcar o relatório inteiro como `Skipped:Ignored` por causa desse único caso. O preparador confere os resultados individuais e aceita somente esse teste visual, identificado pelo nome completo e pelo motivo esperado. Outros testes ignorados, resultados inconclusivos, ausência de casos aprovados ou qualquer falha interrompem a geração. A janela informa separadamente aprovados e ignorados; o teste de pixels continua pendente. A geração automática não é prova de inspeção visual ou de 60 FPS na GTX 1060.
+## Verificações automáticas
 
-O player real será `Builds/Windows/Wynnyng.exe` dentro da revisão baixada. O atalho aponta para ele e permite jogar depois sem iniciar o Editor. Mantenha a pasta do player completa, com as DLLs e `Wynnyng_Data`. O botão **Sair** encerra o aplicativo; no Editor, encerra o Play.
+Preparação importa TMP Essential Resources, configura URP e valida os SOs. O build usa somente a cena da partida e confirma BuildReport, EXE, DLL e `_Data` antes de escrever sucesso/abrir o player. EditMode e PlayMode são obrigatórios por padrão.
 
-## Se houver uma falha
+O NUnit pode produzir agregado `Skipped:Ignored` quando o único teste de pixels não roda em batch. O script verifica cada caso e suíte, aceitando somente o nome e motivo exatos desse teste gráfico conhecido. Outros ignorados, inconclusivos, ausência de aprovados ou falhas interrompem a geração. Nomes e motivos aparecem na janela, assim como erros C# extraídos do log.
 
-A janela mostra a etapa que falhou. Os logs, XMLs dos testes e `build-result.json` ficam em `work/WindowsBuild/` dentro da revisão. O preparador não produz um recibo de sucesso sem os arquivos do player. Se faltar o Editor ou o suporte Windows, a mensagem indica a instalação pelo Unity Hub.
+Nenhum Editor/licença Unity está disponível no ambiente de desenvolvimento. A CI Windows verifica o preparador e os scripts em PowerShell 7/5.1; isso não executa os testes do motor nem inspeciona a imagem do jogo.
 
-Em caso de saída do Unity com erro, o script também mostra os diagnósticos encontrados no final do log, incluindo erros `CSxxxx`, sem exigir abrir o Bloco de Notas. Uma rejeição do XML mostra os nomes e motivos dos resultados problemáticos. Depois de uma correção publicada, basta executar novamente o mesmo preparador: ele consulta a revisão atual e baixa os arquivos corrigidos automaticamente.
+## Comandos para desenvolvimento
 
-Nenhum Editor Unity ou licença estava disponível no ambiente que produziu esta entrega. O player do jogo não foi compilado aqui. O preparador foi compilado separadamente; seus testes de argumentos, arquivos e download não equivalem a testar o jogo.
-
-## Uso pelo clone existente
-
-Também é possível executar `GERAR_E_JOGAR.cmd` na raiz do clone com o Editor fechado. Ele usa os arquivos dessa pasta e chama `tools/Build-and-Play.ps1`.
-
-Opções para desenvolvimento:
+Com o clone atualizado e o Editor fechado:
 
 ```powershell
+./GERAR_E_JOGAR.cmd
 ./tools/Build-and-Play.ps1 -EditorPath 'C:/Program Files/Unity/Hub/Editor/6000.0.62f1/Editor/Unity.exe'
 ./tools/Build-and-Play.ps1 -NoLaunch
 ```
 
-`-SkipTests` existe somente como opção explícita e não é usado pelo preparador. Pelo Editor, **Wynnyng → Gerar EXE Windows** prepara e compila a cena; os testes completos são parte do script externo.
+`-SkipTests` existe somente para uma solicitação explícita e não é usado pelo preparador.
 
-Para recompilar o preparador a partir do código, use SDK .NET 8:
+Para recompilar o preparador, com SDK .NET 8:
 
 ```powershell
 dotnet build tools/WindowsBootstrap/WindowsBootstrap.csproj -c Release -o work/bootstrap
@@ -55,4 +48,4 @@ Copy-Item work/bootstrap/GERAR_E_JOGAR.exe.config .
 pwsh -File tools/Test-BuildPipeline.ps1
 ```
 
-Os testes do preparador não iniciam Unity e não geram um player. Os testes Windows da CI verificam tanto o binário publicado quanto uma compilação nova dos fontes.
+Esses comandos compilam/testam o preparador; gerar o jogo requer o Unity.

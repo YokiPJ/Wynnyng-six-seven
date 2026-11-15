@@ -18,7 +18,9 @@ namespace Wynnyng.Input
         private InputAction rebindAction;
         private Action changed;
         private int rebindSlot;
+        private int rebindFinishedFrame = -1;
         public bool IsRebinding => rebind != null;
+        public bool RebindFinishedThisFrame => rebindFinishedFrame == Time.frameCount;
 
         private sealed class Slot
         {
@@ -60,6 +62,7 @@ namespace Wynnyng.Input
         public InputActionAsset Actions(int player) => slots[player].Asset;
         public string DeviceLabel(int player) => slots[player].Device?.displayName ?? "Sem controle conectado";
         public bool UsesKeyboard(int player) => slots[player].Device is Keyboard;
+        public bool HasDevice(int player) => slots[player].Device != null && slots[player].Device.added && slots[player].Device.enabled;
 
         public PlayerCommand ReadPlayer(int player)
         {
@@ -136,6 +139,7 @@ namespace Wynnyng.Input
         private void FinishRebind(InputActionRebindingExtensions.RebindingOperation operation)
         {
             rebind = null;
+            rebindFinishedFrame = Time.frameCount;
             operation.Dispose();
             rebindAction.Enable();
             rebindAction = null;

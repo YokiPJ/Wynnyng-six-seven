@@ -17,11 +17,13 @@ namespace Wynnyng.Editor
     {
         private const string Root = "Assets/Wynnyng";
         public const string ScenePath = Root + "/Scenes/Phase01A.unity";
+        public const string MatchScenePath = Root + "/Scenes/FootballMatch.unity";
         private const string PipelinePath = Root + "/Rendering/WynnyngURP.asset";
         private const string RendererPath = Root + "/Rendering/WynnyngRenderer.asset";
         private static bool waitingForTmp;
         private static bool exitBatchWhenReady;
         private static bool startAfterPreparation;
+        private static string startSceneAfterPreparation = ScenePath;
         private static Action preparationReady;
         private static Action<Exception> preparationFailure;
 
@@ -50,12 +52,24 @@ namespace Wynnyng.Editor
         [MenuItem("Wynnyng/Preparar e iniciar laboratorio")]
         public static void PrepareAndPlay()
         {
+            PrepareAndPlayScene(ScenePath);
+        }
+
+        [MenuItem("Wynnyng/Preparar e jogar partida")]
+        public static void PrepareAndPlayMatch()
+        {
+            PrepareAndPlayScene(MatchScenePath);
+        }
+
+        private static void PrepareAndPlayScene(string path)
+        {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                Debug.LogError("[Wynnyng] Pare o Play antes de preparar o laboratorio.");
+                Debug.LogError("[Wynnyng] Pare o Play antes de preparar a cena.");
                 return;
             }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            startSceneAfterPreparation = path;
             startAfterPreparation = true;
             try { Prepare(); }
             catch { startAfterPreparation = false; throw; }
@@ -126,7 +140,7 @@ namespace Wynnyng.Editor
                 if (startAfterPreparation)
                 {
                     startAfterPreparation = false;
-                    EditorSceneManager.OpenScene(ScenePath);
+                    EditorSceneManager.OpenScene(startSceneAfterPreparation);
                     EditorApplication.isPlaying = true;
                 }
             }
@@ -152,7 +166,9 @@ namespace Wynnyng.Editor
             PitchConfig pitch = EnsureConfig<PitchConfig>("Pitch");
             BallConfig ball = EnsureConfig<BallConfig>("Ball");
             PresentationConfig presentation = EnsureConfig<PresentationConfig>("Presentation");
+            FootballConfig football = EnsureConfig<FootballConfig>("Football");
             simulation.ValidateOrThrow(); ball.ValidateOrThrow(); pitch.ValidateOrThrow(ball.Radius); presentation.ValidateOrThrow();
+            football.ValidateOrThrow();
             PrepareRendering();
             RenderingResources.RequireConfigured();
             Time.fixedDeltaTime = 1f / simulation.FixedFrequency;
@@ -161,9 +177,10 @@ namespace Wynnyng.Editor
             Physics.bounceThreshold = simulation.BounceThreshold;
             EnsureFolder(Root + "/Scenes");
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null) CreateScene();
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(MatchScenePath) == null) CreateMatchScene();
             EnsureBuildScene();
             AssetDatabase.SaveAssets();
-            Debug.Log("[Wynnyng] Ready. Open Assets/Wynnyng/Scenes/Phase01A.unity and press Play.");
+            Debug.Log("[Wynnyng] Ready. Open Assets/Wynnyng/Scenes/FootballMatch.unity and press Play. Phase01A remains available as the physics laboratory.");
         }
         private static T EnsureConfig<T>(string name) where T : ScriptableObject
         {
@@ -222,17 +239,33 @@ namespace Wynnyng.Editor
         private static void EnsureBuildScene()
         {
             EditorBuildSettingsScene[] existing = EditorBuildSettings.scenes;
+            int otherCount = 0;
             for (int i = 0; i < existing.Length; i++)
             {
-                if (existing[i].path != ScenePath) continue;
-                existing[i].enabled = true;
-                EditorBuildSettings.scenes = existing;
-                return;
+                if (existing[i].path != MatchScenePath && existing[i].path != ScenePath) otherCount++;
             }
-            var appended = new EditorBuildSettingsScene[existing.Length + 1];
-            Array.Copy(existing, appended, existing.Length);
-            appended[existing.Length] = new EditorBuildSettingsScene(ScenePath, true);
-            EditorBuildSettings.scenes = appended;
+            var scenes = new EditorBuildSettingsScene[otherCount + 2];
+            scenes[0] = new EditorBuildSettingsScene(MatchScenePath, true);
+            scenes[1] = new EditorBuildSettingsScene(ScenePath, true);
+            int next = 2;
+            for (int i = 0; i < existing.Length; i++)
+            {
+                if (existing[i].path == MatchScenePath || existing[i].path == ScenePath) continue;
+                scenes[next++] = existing[i];
+            }
+            EditorBuildSettings.scenes = scenes;
+        }
+
+        private static void CreateMatchScene()
+        {
+            Scene previous = SceneManager.GetActiveScene();
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            var bootstrap = new GameObject("Wynnyng Football Match");
+            if (bootstrap.scene != scene) SceneManager.MoveGameObjectToScene(bootstrap, scene);
+            bootstrap.AddComponent<FootballBootstrap>();
+            EditorSceneManager.SaveScene(scene, MatchScenePath);
+            EditorSceneManager.CloseScene(scene, true);
+            if (previous.IsValid()) SceneManager.SetActiveScene(previous);
         }
         private static void EnsureFolder(string path)
         {
@@ -258,6 +291,25 @@ namespace Wynnyng.Editor
                 return;
             }
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null) EditorSceneManager.OpenScene(ScenePath);
+        }
+
+        [MenuItem("Wynnyng/Abrir partida")]
+        public static void OpenMatch()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogError("[Wynnyng] Pare o Play antes de abrir a partida.");
+                return;
+            }
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            if (!TmpResources.TryGetDefaultFont(out _) || !RenderingResources.IsConfigured ||
+                AssetDatabase.LoadAssetAtPath<SceneAsset>(MatchScenePath) == null)
+            {
+                Debug.Log("[Wynnyng] Preparando recursos. Aguarde Ready e escolha Abrir partida novamente.");
+                Prepare();
+                return;
+            }
+            EditorSceneManager.OpenScene(MatchScenePath);
         }
         /// <summary>Batch entry point. Do not add -quit: a first TMP import completes asynchronously.</summary>
         public static void PrepareBatch()

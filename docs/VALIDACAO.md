@@ -62,6 +62,8 @@ A screenshot seguinte mostra o HUD/clock ativos e apenas o fundo da câmera. A �
 
 ## TagManager e geração Windows
 
+A revisão `34066babc30fb89385c281ddc2bdd5a8d2370156` passou na [CI 43686154472](https://github.com/YokiPJ/Wynnyng-six-seven/actions/runs/43686154472): testes de núcleo/validação no Linux e compilação/testes do preparador no Windows. O binário entregue e uma compilação nova foram executados com `--self-test` em Windows. Nenhum desses jobs executou o Editor Unity ou um player do jogo.
+
 O erro de parse mostrado na linha 41 do TagManager ocorreu com entradas de layer vazias como `  -`. Elas foram substituídas por strings explícitas `  - ""`. A validação passa pelos arquivos de settings/assets/cena/metas e rejeita esse formato, chaves repetidas e mudanças dos índices de layers. Os outros arquivos YAML presentes passaram nessa verificação genérica.
 
 Foram reforçadas as configurações não finitas e o contrato de transform do bootstrap, além do botão Sair. O pipeline Windows prepara, testa e usa BuildPipeline, mas precisa do Editor instalado/ativado no PC. O preparador `GERAR_E_JOGAR.exe` baixa a revisão atual e automatiza essas etapas. **Não há player do jogo gerado neste ambiente**, pois não há Unity nem licença disponível. Os testes da CI Windows são do preparador/scripts.

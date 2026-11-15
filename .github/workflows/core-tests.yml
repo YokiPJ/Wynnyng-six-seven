@@ -25,6 +25,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Fresh bootstrap self-test failed' }
           ./GERAR_E_JOGAR.exe --self-test
           if ($LASTEXITCODE -ne 0) { throw 'Shipped bootstrap self-test failed' }
+          New-Item -ItemType Directory -Path work/standalone -Force | Out-Null
+          Copy-Item GERAR_E_JOGAR.exe work/standalone/GERAR_E_JOGAR.exe
+          ./work/standalone/GERAR_E_JOGAR.exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'Single-file bootstrap self-test failed' }
       - uses: actions/upload-artifact@v4
         with:
           name: Wynnyng-preparador-Windows

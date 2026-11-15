@@ -5,6 +5,7 @@
     "Wynnyng.Core",
     "Wynnyng.Configuration",
     "Wynnyng.Runtime",
+    "Wynnyng.Presentation",
     "Unity.RenderPipelines.Core.Runtime",
     "Unity.RenderPipelines.Universal.Runtime",
     "Unity.TextMeshPro"

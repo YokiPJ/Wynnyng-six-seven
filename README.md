@@ -80,6 +80,15 @@ Se você baixou a primeira entrega e apareceu **Package Manager Error** dizendo 
 4. Salve e reabra o projeto pelo Hub. O nome já está corrigido na branch `codex/phase-0-1a`.
 5. Execute **Wynnyng → Preparar Fases 0 e 1A**, depois **Wynnyng → Abrir laboratorio Fase 1A**, e aperte **Play** na aba **Game**. A cena `Untitled` com câmera/luz não é o laboratório.
 
+Se a cena do laboratório abrir preta e a Console mostrar `TMP_Settings.get_defaultFontAsset` / erros repetidos em `LaboratoryHud.Update`:
+
+1. Pare o **Play** pelo botão azul no topo. TMP Essential Resources só pode ser importado fora do Play; o erro `Cannot import package in play mode` indica que a importação foi tentada durante a execução.
+2. Use **Window → TextMeshPro → Import TMP Essential Resources**. Em algumas instalações o submenu aparece como **Text Mesh Pro**. Importe os recursos essenciais e aguarde terminar.
+3. Execute **Wynnyng → Preparar Fases 0 e 1A** e aguarde **Ready**.
+4. Na Console, clique em **Clear** para remover as mensagens antigas. Entre em Play novamente na cena `Phase01A`.
+
+O código corrigido verifica os settings/fontes antes de criar o mundo e só ativa o HUD depois de construir todos os seus componentes. Uma falha de inicialização limpa o mundo parcial e restaura os parâmetros globais. O comando de preparação não informa Ready enquanto a fonte padrão não estiver carregada. Atualizar a branch traz essas proteções; importar TMP fora do Play resolve os recursos ausentes também na cópia anterior.
+
 ## 4. Controles preparados para a Fase 1B
 
 Estes comandos já existem no asset de entrada. Nesta entrega, somente os comandos do laboratório e o menu de remapeamento produzem ações visíveis.
@@ -133,11 +142,13 @@ Cobertura preparada:
 - Física pura: fórmula de arrasto, direção de Magnus, resistência sem inverter velocidade, rolamento, parâmetros inválidos e valores não finitos.
 - Infraestrutura: seed reproduzível, seed zero definida, relógio, capacidade/inscrição/remoção de eventos e contagem única por bola em jogo.
 - EditMode do Unity: SOs, recursos, ações necessárias e isolamento/serialização dos remapeamentos.
-- PlayMode do Unity: bootstrap/60 Hz, dimensões e componentes, gol nos dois sentidos, bola acima da trave, lateral, colisão na trave, quique, curva e reset.
+- EditMode de TMP: ausência dos settings sem acessar o getter inseguro, ausência da fonte padrão e fonte carregada após preparação.
+- PlayMode do Unity: bootstrap/60 Hz, dimensões e componentes, gol nos dois sentidos, bola acima da trave, lateral, colisão na trave, quique, curva e reset; HUD rejeitado sem erros por frame, inicialização com apresentação completa e nova tentativa após falha.
 
 Checklist manual — marque depois de executar no seu PC:
 
 - [ ] Projeto abre e compila sem erros nem warnings.
+- [ ] TMP Essential Resources importado com o Play parado; preparação só informa Ready quando a fonte padrão existe.
 - [ ] Campo 105 × 68 m com perímetro, meio, círculo central, áreas, marcas de pênalti, arcos e cantos.
 - [ ] Dois gols com abertura livre 7,32 × 2,44 m; traves colidem; redes seguram a bola.
 - [ ] Campo, bola, traves e textos aparecem com as cores corretas, sem materiais rosa.
@@ -151,6 +162,7 @@ Checklist manual — marque depois de executar no seu PC:
 - [ ] Remapeamento funciona por mouse/teclado e por navegação do gamepad; continua após fechar/abrir o jogo.
 - [ ] Dois gamepads possuem remapeamentos independentes; desconexão/reconexão não gera exceções.
 - [ ] EditMode e PlayMode passam no Test Runner.
+- [ ] Com recursos TMP ausentes, a tentativa de Play relata uma falha de preparação, sem gerar `NullReferenceException` a cada frame; depois de importar os recursos fora do Play, a cena inicia normalmente.
 - [ ] Num Development Build Windows, medir CPU/GPU/GC pelo Profiler, após aquecimento, com captura da máquina e resolução. Meta: 60 FPS; validação na GTX 1060 ainda pendente.
 
 ## 6. Tuning e sensação

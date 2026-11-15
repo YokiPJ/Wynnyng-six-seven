@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Wynnyng.Configuration;
@@ -32,7 +33,7 @@ namespace Wynnyng.Runtime
         private Vector3 oldGravity;
         private int oldTargetRate, oldVSync;
         private SimulationMode oldSimulationMode;
-        public bool IsInitialized => session != null;
+        public bool IsInitialized { get; private set; }
         public BallBody Ball => ballBody;
         public MatchSession Session => session;
         public IPlayerCommandSource PlayerInput => inputs;
@@ -59,6 +60,21 @@ namespace Wynnyng.Runtime
         public void Initialize()
         {
             if (IsInitialized) return;
+            try
+            {
+                BuildWorld();
+                IsInitialized = true;
+                enabled = true;
+            }
+            catch
+            {
+                ReleaseWorld();
+                enabled = false;
+                throw;
+            }
+        }
+        private void BuildWorld()
+        {
             if (simulation == null) simulation = Resources.Load<SimulationConfig>("Config/Simulation");
             if (pitch == null) pitch = Resources.Load<PitchConfig>("Config/Pitch");
             if (ball == null) ball = Resources.Load<BallConfig>("Config/Ball");
@@ -68,6 +84,8 @@ namespace Wynnyng.Runtime
             if (FindObjectsByType<MatchBootstrap>(FindObjectsSortMode.None).Length != 1)
                 throw new InvalidOperationException("Open one laboratory scene at a time.");
             simulation.ValidateOrThrow(); ball.ValidateOrThrow(); pitch.ValidateOrThrow(ball.Radius); presentation.ValidateOrThrow();
+            // Validate UI dependencies before changing global settings or creating any runtime objects.
+            TMP_FontAsset hudFont = withPresentation && withInput ? TmpResources.RequireDefaultFont() : null;
             log = new UnityGameLog(simulation.EnableLogging);
             SaveAndApplyGlobals();
             world = new GameObject("Wynnyng Runtime World");
@@ -98,7 +116,7 @@ namespace Wynnyng.Runtime
                     var canvas = new GameObject("Laboratory HUD");
                     canvas.transform.SetParent(world.transform, false);
                     hud = canvas.AddComponent<LaboratoryHud>();
-                    hud.Initialize(inputs, this, presentation);
+                    hud.Initialize(inputs, this, presentation, hudFont);
                 }
             }
             Physics.SyncTransforms();
@@ -107,7 +125,7 @@ namespace Wynnyng.Runtime
 
         private void Update()
         {
-            if (inputs == null) return;
+            if (!IsInitialized || inputs == null) return;
             inputs.ReadLaboratory(out int direction, out bool launch, out bool reset, out bool bindings);
             if (bindings && hud != null) hud.ToggleBindings();
             if (hud != null && hud.RebindVisible) return;
@@ -182,16 +200,28 @@ namespace Wynnyng.Runtime
             Physics.simulationMode = SimulationMode.FixedUpdate;
             Application.targetFrameRate = simulation.TargetFrameRate; QualitySettings.vSyncCount = 0;
         }
-        private void OnDestroy()
+        private void ReleaseWorld()
         {
+            IsInitialized = false;
+            if (world != null)
+            {
+                world.SetActive(false);
+                Destroy(world);
+                world = null;
+            }
             inputs?.Dispose();
+            inputs = null;
             if (events != null) events.Unsubscribe(OnMatchEvent);
-            if (world != null) Destroy(world);
+            events = null;
+            hud = null; ballBody = null; session = null;
+            resetRequested = false; launchRequested = false; resetCountdown = NoPendingReset;
             if (!globalsChanged) return;
             Time.fixedDeltaTime = oldFixedDelta; Time.maximumDeltaTime = oldMaximumDelta;
             Physics.gravity = oldGravity; Physics.bounceThreshold = oldBounce;
             Physics.simulationMode = oldSimulationMode;
             Application.targetFrameRate = oldTargetRate; QualitySettings.vSyncCount = oldVSync;
+            globalsChanged = false;
         }
+        private void OnDestroy() { ReleaseWorld(); }
     }
 }

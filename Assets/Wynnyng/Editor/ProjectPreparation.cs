@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using Wynnyng.Configuration;
+using Wynnyng.Presentation;
 using Wynnyng.Runtime;
 
 namespace Wynnyng.Editor
@@ -29,7 +30,7 @@ namespace Wynnyng.Editor
                 Debug.LogError("[Wynnyng] Stop Play Mode before preparing the project.");
                 return;
             }
-            if (Resources.Load<TMP_Settings>("TMP Settings") == null || TMP_Settings.defaultFontAsset == null)
+            if (!TmpResources.TryGetDefaultFont(out _))
             {
                 if (waitingForTmp) return;
                 UnityEditor.PackageManager.PackageInfo package = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(TMP_Text).Assembly);
@@ -73,6 +74,8 @@ namespace Wynnyng.Editor
         {
             try
             {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                _ = TmpResources.RequireDefaultFont();
                 PrepareAssets();
                 if (exitBatchWhenReady) EditorApplication.Exit(0);
             }
@@ -180,8 +183,18 @@ namespace Wynnyng.Editor
         [MenuItem("Wynnyng/Abrir laboratorio Fase 1A")]
         public static void OpenLaboratory()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogError("[Wynnyng] Pare o Play antes de abrir a cena do laboratorio.");
+                return;
+            }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null) Prepare();
+            if (!TmpResources.TryGetDefaultFont(out _) || AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
+            {
+                Debug.Log("[Wynnyng] Preparando recursos. Aguarde Ready e escolha Abrir laboratorio novamente.");
+                Prepare();
+                return;
+            }
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null) EditorSceneManager.OpenScene(ScenePath);
         }
         /// <summary>Batch entry point. Do not add -quit: a first TMP import completes asynchronously.</summary>

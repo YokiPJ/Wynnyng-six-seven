@@ -14,6 +14,7 @@ Sensação desejada: arcade-sim de futebol clássico, com conteúdo original. N�
 - URP **17.0.4**, Input System **1.11.2**, Cinemachine **3.1.3**, uGUI **2.0.0** com TMP, Test Framework **1.4.5**.
 - Novo backend ativo: `activeInputHandler: 1`. Sem `UnityEngine.Input` legado, `.velocity`/`.drag` antigos ou namespace Cinemachine 2.
 - Correção após a primeira abertura do usuário: o manifest inicial tinha `com.unity.modules.screen-capture`, nome inválido. O correto é **`com.unity.modules.screencapture`**, versão 1.0.0. Os outros 23 módulos declarados foram conferidos nas páginas do manual Unity 6. O validador agora verifica nomes/versões de módulos e tem 4 testes de regressão Python executados na CI. Isso não equivale a resolver pacotes dentro do Editor.
+- Correção após o log de Play: TMP settings/fontes ausentes causaram `TMP_Settings.get_defaultFontAsset` e o HUD parcialmente inicializado repetiu `NullReferenceException` por frame. O log também confirmou tentativas de importar TMP em Play (`Cannot import package in play mode`). Orientar parar Play, importar **Window > TextMeshPro > Import TMP Essential Resources**, aguardar e preparar novamente. `TmpResources` usa `TMP_Settings.LoadDefaultSettings()` antes do getter da fonte; o bootstrap verifica dependências antes de criar o mundo, e o HUD só atualiza após inicialização completa. Preparação só informa Ready após confirmar a fonte.
 - Manifest versionado. `packages-lock.json` será produzido pelo primeiro import no Editor, sem inventar uma resolução não executada.
 
 ## Estado de aceite
@@ -56,6 +57,8 @@ O diagrama é uma ordem de camadas, não uma dependência de todas as camadas ac
 `Core` contém `Vec3`, `BallPhysics`, `PitchGeometry`, `BoundaryEvaluator`, `BoundaryTracker`, `MatchSession`, `SimulationClock`, `SeededRandom`, `EventChannel<T>` e interfaces. Não depende de MonoBehaviour, Time, Rigidbody, Input, UI ou dados de clubes. Os mesmos fontes são compilados em `tools/CoreLibrary/`.
 
 `MatchBootstrap` é a composition root. Carrega configs de Resources ou usa referências do Inspector; valida antes de construir. Cria mundo procedural, bola, sessão, eventos, entrada opcional e apresentação opcional. Um laboratório ativo por vez. Deve ficar na origem com escala 1. Salva/restaura timestep, limite de frames, gravidade, bounce threshold, simulationMode e vSync ao ser destruído.
+
+`MatchBootstrap.IsInitialized` é um commit de inicialização completa, incluindo o HUD quando habilitado; não depende apenas de a sessão existir. Em exceção, desativa/destrói o mundo parcial, libera os inputs/eventos, remove as referências da sessão/bola/HUD, restaura parâmetros globais e desabilita o componente. É possível configurar/corrigir e tentar `Initialize` novamente. `LaboratoryHud` recebe a fonte explicitamente; fica desabilitado até terminar e `Update`/menu também verificam `IsInitialized`. `TmpResources.TryGetDefaultFont` permite loaders opcionais para testar ausência sem apagar assets do usuário. Não chamar o getter estático da fonte antes de verificar os settings.
 
 `MatchBootstrap.FixedUpdate` consome comandos da bancada, amostra o resultado físico anterior, avança sessão/detector e aplica aceleração para o próximo solve do PhysX. Physics em `SimulationMode.FixedUpdate`, **1/60 s**. Detecção pode ser observada no próximo passo fixo; não depende de triggers. Rigidbody com `Interpolate` para renderização.
 
@@ -133,5 +136,7 @@ O projeto ainda não contém um jogo 11×11, nem elenco/rating oficial ou placeh
 Redes rígidas e traves com cápsulas são blockout. Vista geral Cinemachine fixa serve para ver o campo inteiro; a bola de 22 cm tem um marcador no chão para ser visível à distância. Shaders HLSL são originais e sem marcas. TMP usa recursos fornecidos pelo próprio Unity, importados pelo comando de preparação.
 
 Antes de declarar aceite 0/1A: abrir no Editor correto; preparar; corrigir eventuais erros/warnings reais; rodar EditMode/PlayMode; verificar os oito cenários; medir a integração no Profiler e num PC representativo. **Não contornar essa pendência dizendo que teste .NET valida Rigidbody, shaders ou FPS.**
+
+Após a correção de TMP, são esperados **47 casos EditMode** e **12 testes PlayMode**, incluindo apresentação completa, falha de HUD sem spam e recuperação do bootstrap. Os testes novos dependem do Unity e foram preparados, não executados neste ambiente. O núcleo permanece com 42 testes headless. A importação manual precisa terminar antes do Play; não interpretar o erro antigo de pacote ainda visível na Console como prova de uma nova falha sem limpar/reproduzir.
 
 Quando o usuário disser “próxima”, implementar apenas 1B: jogador com inércia, passe, chute, câmera Wide ponderada e sliders runtime, preservando todos os contratos/testes anteriores e atualizando este HANDOFF.

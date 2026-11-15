@@ -56,6 +56,8 @@ Assets/Wynnyng/Presentation/PitchFactory.cs
 Assets/Wynnyng/Presentation/PitchFactory.cs.meta
 Assets/Wynnyng/Presentation/RuntimeAssets.cs
 Assets/Wynnyng/Presentation/RuntimeAssets.cs.meta
+Assets/Wynnyng/Presentation/TmpResources.cs
+Assets/Wynnyng/Presentation/TmpResources.cs.meta
 Assets/Wynnyng/Presentation/Wynnyng.Presentation.asmdef
 Assets/Wynnyng/Presentation/Wynnyng.Presentation.asmdef.meta
 Assets/Wynnyng/Resources.meta
@@ -94,6 +96,8 @@ Assets/Wynnyng/Tests/EditMode/ConfigurationTests.cs
 Assets/Wynnyng/Tests/EditMode/ConfigurationTests.cs.meta
 Assets/Wynnyng/Tests/EditMode/CoreTests.cs
 Assets/Wynnyng/Tests/EditMode/CoreTests.cs.meta
+Assets/Wynnyng/Tests/EditMode/TmpResourcesTests.cs
+Assets/Wynnyng/Tests/EditMode/TmpResourcesTests.cs.meta
 Assets/Wynnyng/Tests/EditMode/Wynnyng.Tests.EditMode.asmdef
 Assets/Wynnyng/Tests/EditMode/Wynnyng.Tests.EditMode.asmdef.meta
 Assets/Wynnyng/Tests/PlayMode.meta

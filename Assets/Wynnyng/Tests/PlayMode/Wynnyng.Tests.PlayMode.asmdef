@@ -4,7 +4,10 @@
   "references": [
     "Wynnyng.Core",
     "Wynnyng.Configuration",
-    "Wynnyng.Runtime"
+    "Wynnyng.Runtime",
+    "Wynnyng.Input",
+    "Wynnyng.Presentation",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

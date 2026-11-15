@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Wynnyng.Configuration;
 using Wynnyng.Core;
+using Wynnyng.Presentation;
 using Wynnyng.Runtime;
 
 namespace Wynnyng.Tests.PlayMode
@@ -145,6 +146,81 @@ namespace Wynnyng.Tests.PlayMode
             Assert.That(bootstrap.Session.BallInPlay, Is.True);
             Assert.That(bootstrap.Ball.Position.Z, Is.EqualTo(0f).Within(0.001f));
             Assert.That(bootstrap.Ball.Velocity.Z, Is.EqualTo(0f).Within(0.001f));
+        }
+        [UnityTest]
+        public IEnumerator RejectedHudInitializationDoesNotProduceFrameErrors()
+        {
+            var incomplete = new GameObject("Incomplete HUD");
+            try
+            {
+                LaboratoryHud hud = incomplete.AddComponent<LaboratoryHud>();
+                var error = Assert.Throws<System.ArgumentNullException>(
+                    () => hud.Initialize(null, bootstrap, presentation, null));
+                Assert.That(error.ParamName, Is.EqualTo("defaultFont"));
+                Assert.That(hud.IsInitialized, Is.False);
+                Assert.That(hud.enabled, Is.False);
+                // Even an external script enabling the incomplete component must not restart the error loop.
+                hud.enabled = true;
+                hud.ToggleBindings();
+                yield return null;
+                yield return null;
+                LogAssert.NoUnexpectedReceived();
+            }
+            finally { Object.Destroy(incomplete); }
+        }
+
+        [UnityTest]
+        public IEnumerator CompletePresentationStartsWithReadyHudAndCameraLookingAtThePitch()
+        {
+            Object.Destroy(root);
+            yield return null;
+            root = new GameObject("Presentation Acceptance Fixture");
+            bootstrap = root.AddComponent<MatchBootstrap>();
+            bootstrap.Configure(simulation, pitch, ball, presentation, true, true);
+            bootstrap.Initialize();
+            yield return null;
+            yield return fixedFrame;
+            LaboratoryHud hud = root.GetComponentInChildren<LaboratoryHud>();
+            Assert.That(bootstrap.IsInitialized, Is.True);
+            Assert.That(hud, Is.Not.Null);
+            Assert.That(hud.IsInitialized, Is.True);
+            Assert.That(hud.enabled, Is.True);
+            Camera camera = root.GetComponentInChildren<Camera>();
+            Assert.That(camera, Is.Not.Null);
+            Vector3 target = camera.WorldToViewportPoint(presentation.OverviewTarget);
+            Assert.That(target.z, Is.GreaterThan(camera.nearClipPlane));
+            Assert.That(target.x, Is.EqualTo(0.5f).Within(0.01f));
+            Assert.That(target.y, Is.EqualTo(0.5f).Within(0.01f));
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator FailedBootstrapCanBeRetriedWithoutLeavingAReadySessionOrDuplicateWorld()
+        {
+            Object.Destroy(root);
+            yield return null;
+            root = new GameObject("Startup Failure Acceptance Fixture");
+            bootstrap = root.AddComponent<MatchBootstrap>();
+            bootstrap.Configure(simulation, pitch, ball, presentation, false, false);
+            float previousStep = Time.fixedDeltaTime;
+            Vector3 previousGravity = Physics.gravity;
+            ball.Mass = 0f;
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => bootstrap.Initialize());
+            Assert.That(bootstrap.IsInitialized, Is.False);
+            Assert.That(bootstrap.Session, Is.Null);
+            Assert.That(bootstrap.Ball, Is.Null);
+            Assert.That(bootstrap.enabled, Is.False);
+            Assert.That(root.transform.childCount, Is.Zero);
+            Assert.That(Time.fixedDeltaTime, Is.EqualTo(previousStep));
+            Assert.That(Physics.gravity, Is.EqualTo(previousGravity));
+            ball.Mass = 0.43f;
+            bootstrap.Initialize();
+            yield return null;
+            yield return fixedFrame;
+            Assert.That(bootstrap.IsInitialized, Is.True);
+            Assert.That(bootstrap.enabled, Is.True);
+            Assert.That(root.transform.childCount, Is.EqualTo(1));
+            LogAssert.NoUnexpectedReceived();
         }
         private void Launch(Vec3 position, Vec3 velocity, Vec3 spin)
         {

@@ -6,7 +6,8 @@
     "Wynnyng.Configuration",
     "Wynnyng.Input",
     "Wynnyng.Presentation",
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

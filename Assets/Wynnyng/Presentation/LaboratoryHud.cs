@@ -17,7 +17,7 @@ namespace Wynnyng.Presentation
         private ILaboratoryControls lab;
         private PresentationConfig config;
         private TMP_FontAsset font;
-        private TextMeshProUGUI telemetry, scenario, status, device, rebindTitle;
+        private TextMeshProUGUI telemetry, scenario, status, rebindTitle;
         private RectTransform rebindPanel, rows;
         private InputSystemUIInputModule uiModule;
         private EventSystem eventSystem;
@@ -27,13 +27,21 @@ namespace Wynnyng.Presentation
         private int selectedPlayer;
         private string previousStatus, previousScenario, previousDevice;
         private bool refreshBindings;
-        public bool RebindVisible => rebindPanel != null && rebindPanel.gameObject.activeSelf;
+        public bool IsInitialized { get; private set; }
+        public bool RebindVisible => IsInitialized && rebindPanel != null && rebindPanel.gameObject.activeSelf;
 
-        public void Initialize(LocalInputHub hub, ILaboratoryControls controls, PresentationConfig presentation)
+        private void Awake() { if (!IsInitialized) enabled = false; }
+
+        public void Initialize(LocalInputHub hub, ILaboratoryControls controls, PresentationConfig presentation,
+            TMP_FontAsset defaultFont)
         {
+            if (IsInitialized) throw new System.InvalidOperationException("HUD is already initialized.");
+            if (defaultFont == null) throw new System.ArgumentNullException(nameof(defaultFont), TmpResources.MissingResourcesMessage);
+            if (hub == null) throw new System.ArgumentNullException(nameof(hub));
+            if (controls == null) throw new System.ArgumentNullException(nameof(controls));
+            if (presentation == null) throw new System.ArgumentNullException(nameof(presentation));
             inputs = hub; lab = controls; config = presentation;
-            font = TMP_Settings.defaultFontAsset;
-            if (font == null) throw new System.InvalidOperationException("Run Wynnyng > Preparar Fases 0 e 1A to import TMP resources.");
+            font = defaultFont;
             Canvas canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
@@ -72,17 +80,17 @@ namespace Wynnyng.Presentation
             laboratoryFocus = ButtonAt(bottom, "Controles", new Vector2(pad + third, -pad - h * 3f), third * 2f, ToggleBindings);
             Label(bottom, "D-pad: caso  |  RB: lancar  |  Select: repor\nTeclado: setas, Enter, R  |  Start/F1: controles",
                 new Vector2(pad, -pad - h * 4f), config.HudWidth - pad * 2f, h, Color.white, config.FontSize * 0.72f);
-            device = Label(transform, "", new Vector2(pad, -config.ReferenceResolution.y + h + pad),
-                config.HudWidth, h, Color.white, config.FontSize * 0.7f);
-            device.gameObject.SetActive(false);
             BuildRebindPanel();
             eventSystem.firstSelectedGameObject = laboratoryFocus.gameObject;
             eventSystem.SetSelectedGameObject(laboratoryFocus.gameObject);
             UpdateLabels();
+            IsInitialized = true;
+            enabled = true;
         }
 
         public void ToggleBindings()
         {
+            if (!IsInitialized) return;
             bool show = !RebindVisible;
             inputs.CancelRebind();
             rebindPanel.gameObject.SetActive(show);
@@ -171,7 +179,7 @@ namespace Wynnyng.Presentation
         private void OnBindingsChanged() { refreshBindings = true; }
         private void Update()
         {
-            if (lab == null) return;
+            if (!IsInitialized) return;
             uiModule.enabled = !inputs.IsRebinding;
             if (refreshBindings && RebindVisible) RefreshBindings();
             if (RebindVisible && previousDevice != inputs.DeviceLabel(selectedPlayer)) RefreshBindings();

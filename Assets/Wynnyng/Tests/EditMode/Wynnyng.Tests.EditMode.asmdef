@@ -4,7 +4,9 @@
   "references": [
     "Wynnyng.Core",
     "Wynnyng.Configuration",
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "Wynnyng.Presentation",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [
     "Editor"

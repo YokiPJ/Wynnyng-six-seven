@@ -9,8 +9,8 @@ Ambiente Linux, .NET SDK **8.0.428**, sem Unity Editor instalado/licenciado. Ins
 | Compilação do núcleo | **Passou**, C# 9, .NET Standard 2.1, warnings tratados como erros |
 | Testes do núcleo em .NET 8 | **42 passaram, 0 falhas, 0 ignorados** |
 | Alocação do núcleo após aquecimento | **0 bytes gerenciados** em 60.000 passos, incluindo física pura, sessão, RNG e publicação de eventos |
-| Sintaxe dos scripts de Assets | **24 arquivos, 0 erros** com Roslyn/C# 9; não verifica tipos do motor |
-| Estrutura do projeto | **Passou**: 55 GUIDs únicos de assets/pastas, 8 assemblies sem ciclos, referências e IDs das ações válidos |
+| Sintaxe dos scripts de Assets | **26 arquivos, 0 erros** com Roslyn/C# 9; não verifica tipos do motor |
+| Estrutura do projeto | **Passou**: 57 GUIDs únicos de assets/pastas, 8 assemblies sem ciclos, referências e IDs das ações válidos |
 | APIs antigas / código incompleto | Sem usos de Input legado, `FindObjectOfType`, `FindObjectsOfType`, LINQ ou marcadores de implementação pendente nos scripts |
 | Espaços/diff | `git diff --check` sem problemas; verificação repetida após adicionar os arquivos ao índice |
 
@@ -34,14 +34,26 @@ As páginas do manual Unity 6 dos outros 23 módulos declarados foram consultada
 
 O validador agora inclui nomes e versões dos módulos. Quatro testes Python verificam a rejeição do erro original, a aceitação do nome correto, uma versão inválida e o manifest entregue. O README descreve a correção local de uma linha e como abrir a cena certa após a resolução dos pacotes. Nenhum sistema da Fase 1B foi iniciado.
 
+## Correção após o log de inicialização do usuário
+
+O log enviado confirmou: settings/fontes TMP ausentes; exceção no getter estático `TMP_Settings.defaultFontAsset`; 1.619 erros subsequentes em `LaboratoryHud.Update`; e quatro tentativas de importar o pacote durante Play. A ausência de TMP e a falta de proteção contra atualização de um HUD parcial são falhas distintas, ambas tratadas nesta correção.
+
+- `TmpResources` carrega os settings pela API null-safe `LoadDefaultSettings` e só depois lê a fonte. A assinatura foi conferida nas fontes oficiais uGUI/TMP.
+- O bootstrap verifica TMP antes de criar objetos ou alterar configurações globais. `IsInitialized` só é verdadeiro depois da inicialização completa; exceções liberam o mundo parcial e restauram os globais.
+- O HUD recebe a fonte por parâmetro e não atualiza nem abre menus antes de concluir a construção.
+- A preparação aguarda a importação e confirma a fonte antes da mensagem Ready. Abrir o laboratório por menu com recursos ausentes inicia a preparação em vez de abrir uma cena que já falharia.
+- Três novos casos EditMode cobrem settings ausentes sem chamar o getter, fonte ausente e recursos preparados. Três novos PlayMode cobrem HUD rejeitado sem erros por frame, apresentação completa/câmera e nova tentativa do bootstrap após falha.
+
+Os novos testes de Unity foram escritos e verificados sintaticamente, mas **não foram executados neste ambiente**. A solução imediata para a cópia do usuário é parar o Play, importar TMP Essential Resources, aguardar e preparar novamente. A renderização e o restante do aceite precisam de nova execução no Editor.
+
 ## Preparado, sem execução neste ambiente
 
 | Aceite | Como verificar |
 |---|---|
 | Compilação Unity 6 completa, sem erros/warnings | Abrir no Editor 6000.0.62f1; aguardar importação e conferir Console |
 | Resolução efetiva dos pacotes | Package Manager; primeiro import gera `packages-lock.json` |
-| EditMode | Test Runner: 44 casos esperados, incluindo 3 testes de configuração/entrada que dependem do motor |
-| PlayMode | Test Runner: 9 testes de integração, descritos no README |
+| EditMode | Test Runner: 47 casos esperados, incluindo configurações/entrada e os 3 casos TMP |
+| PlayMode | Test Runner: 12 testes de integração, incluindo HUD e apresentação, descritos no README |
 | HLSL, materiais e layout da interface | Inspeção em Play no Editor com renderização habilitada |
 | Hotplug, remapeamento e dois controles físicos | Checklist manual do README |
 | 60 FPS / GTX 1060 / GC da integração | Development Build Windows e Profiler após aquecimento |

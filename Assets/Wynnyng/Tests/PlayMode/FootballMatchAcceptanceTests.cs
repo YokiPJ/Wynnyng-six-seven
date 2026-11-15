@@ -160,5 +160,55 @@ namespace Wynnyng.Tests.PlayMode
             yield return null;
             LogAssert.NoUnexpectedReceived();
         }
+
+        [UnityTest]
+        public IEnumerator PoweredCornerShotScoresWithTheRealBallAndActiveGoalkeeper()
+        {
+            yield return WaitForLiveBall();
+            bootstrap.enabled = false;
+            SimulationMode previousMode = Physics.simulationMode;
+            Physics.simulationMode = SimulationMode.Script;
+            try
+            {
+                FootballMatch match = bootstrap.Match;
+                Vec3 shotPosition = new Vec3(0f, ball.Radius + ball.ResetClearance, pitch.Length * 0.5f - 18f);
+                for (int i = 0; i < match.Players.Length; i++)
+                {
+                    if (!match.Players[i].IsGoalkeeper)
+                        match.Players[i].Position = new Vec3(i % 2 == 0 ? -30f : 30f, 0f, -20f + i);
+                    match.Players[i].Velocity = default;
+                }
+                match.Players[9].Position = shotPosition - new Vec3(0f, shotPosition.Y, 0.8f);
+                match.Players[9].Facing = new Vec3(0f, 0f, 1f);
+                for (int i = 0; i < bootstrap.PlayerBodies.Length; i++)
+                    bootstrap.PlayerBodies[i].position = BallBody.ToUnity(match.Players[i].Position);
+                bootstrap.Ball.Teleport(shotPosition);
+                Physics.SyncTransforms();
+                ManualPhysicsStep(new PlayerCommand { ShootPressed = true, ShootHeld = true });
+                int chargeSteps = Mathf.CeilToInt(match.Parameters.ChargeSeconds * simulation.FixedFrequency);
+                for (int i = 0; i < chargeSteps; i++) ManualPhysicsStep(new PlayerCommand { ShootHeld = true });
+                FootballBallAction shot = ManualPhysicsStep(new PlayerCommand { ShootReleased = true, MoveX = 0.3f, MoveY = 1f });
+                Assert.That(shot.Kind, Is.EqualTo(FootballKickKind.Shot));
+                for (int i = 0; i < 240 && match.Phase == FootballPhase.Playing; i++) ManualPhysicsStep(default);
+                Assert.That(match.HomeGoals, Is.EqualTo(1), "The physical ball must enter the open goal with its goalkeeper still active.");
+                Assert.That(match.AwayGoals, Is.Zero);
+            }
+            finally { Physics.simulationMode = previousMode; }
+            yield return null;
+            LogAssert.NoUnexpectedReceived();
+        }
+        private FootballBallAction ManualPhysicsStep(PlayerCommand command)
+        {
+            float dt = 1f / simulation.FixedFrequency;
+            FootballBallAction action = bootstrap.Match.Step(dt, bootstrap.Ball.Position, bootstrap.Ball.Velocity,
+                command, default, false);
+            for (int i = 0; i < bootstrap.PlayerBodies.Length; i++)
+                bootstrap.PlayerBodies[i].MovePosition(BallBody.ToUnity(bootstrap.Match.Players[i].Position));
+            if (action.Teleport) bootstrap.Ball.Teleport(action.Position);
+            if (action.HasKick) bootstrap.Ball.Launch(action.Velocity, action.Spin);
+            bootstrap.Ball.FixedStep(dt);
+            Physics.Simulate(dt);
+            return action;
+        }
     }
 }

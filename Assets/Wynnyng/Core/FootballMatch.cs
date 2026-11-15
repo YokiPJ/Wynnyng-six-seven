@@ -19,6 +19,7 @@ namespace Wynnyng.Core
         private readonly bool[] charging = new bool[2];
         private readonly int[] chargeActor = new int[2];
         private readonly int[] chasers = new int[2];
+        private readonly float[] keeperThreatTime = new float[2];
         private float phaseCountdown, aiCountdown, switchCountdown;
         private Vec3 restartPosition;
         private int restartTeam, lastTouchTeam, lastTouchActor = -1, pendingPassTeam = -1, pendingPassActor = -1;
@@ -45,6 +46,8 @@ namespace Wynnyng.Core
             Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
             Parameters.Validate();
             pitch = geometry;
+            if (Parameters.ShotPostMargin >= pitch.GoalHalfWidth - pitch.BallRadius)
+                throw new ArgumentException("Shot post margin must leave a valid goal opening.", nameof(parameters));
             random = rng ?? throw new ArgumentNullException(nameof(rng));
             boundaries = new BoundaryTracker(pitch, CentreBall);
             for (int i = 0; i < PlayerCount; i++)
@@ -74,6 +77,7 @@ namespace Wynnyng.Core
             restartTeam = team; lastTouchTeam = team; lastTouchActor = -1;
             BallOwner = -1; pendingPassTeam = -1; pendingPassActor = -1;
             CancelCharges(); switchCountdown = 0f; aiCountdown = 0f;
+            keeperThreatTime[0] = keeperThreatTime[1] = 0f;
             for (int i = 0; i < PlayerCount; i++)
             {
                 FootballPlayer player = Players[i];
@@ -150,6 +154,11 @@ namespace Wynnyng.Core
                 PlayerCommand command = i == ControlledPlayer && !CpuHome ? homeCommand : awayCommand;
                 Vec3 move = human ? new Vec3(command.MoveX, 0f, command.MoveY) : targets[i] - Players[i].Position;
                 bool sprint = human ? command.Sprint > 0f : move.LengthSquared > Parameters.AiSprintDistance * Parameters.AiSprintDistance;
+                if (human && command.ShootHeld && BallOwner == i)
+                {
+                    move = move * Parameters.ShotChargeMoveFraction;
+                    sprint = false;
+                }
                 if (!human)
                 {
                     if (i == chasers[Players[i].Team] && BallOwner != i &&
@@ -161,7 +170,7 @@ namespace Wynnyng.Core
                 MovePlayer(i, move, sprint, dt);
             }
             SeparatePlayers();
-            FootballBallAction keeperAction = TryGoalkeeper(ballPosition, ballVelocity);
+            FootballBallAction keeperAction = TryGoalkeeper(ballPosition, ballVelocity, dt);
             if (keeperAction.HasKick) return keeperAction;
             FootballBallAction action;
             if (!CpuHome)
@@ -248,6 +257,12 @@ namespace Wynnyng.Core
                 int attack = AttackSign(player.Team);
                 if (player.IsGoalkeeper)
                 {
+                    bool incoming = velocity.Z * attack < 0f && velocity.Length > Parameters.KeeperCollectionSpeed;
+                    if (incoming && keeperThreatTime[player.Team] < Parameters.KeeperReactionSeconds)
+                    {
+                        targets[i] = player.Position;
+                        continue;
+                    }
                     float advance = Math.Min(Parameters.KeeperAdvance,
                         Math.Max(Parameters.KeeperGoalOffset, (pitch.HalfLength - Math.Abs(ball.Z)) * Parameters.TeamBallShift));
                     float goalDistance = Math.Max(Parameters.KeeperAdvance, pitch.HalfLength + ball.Z * attack);
@@ -290,6 +305,7 @@ namespace Wynnyng.Core
             player.Stamina = Clamp01(player.Stamina + (run ? -Parameters.StaminaDrain : Parameters.StaminaRecovery) * dt);
             float tired = Parameters.TiredSpeedFraction + (1f - Parameters.TiredSpeedFraction) * player.Stamina;
             float speed = (run ? Parameters.SprintSpeed : Parameters.JogSpeed) * magnitude * tired;
+            if (player.IsGoalkeeper) speed = Math.Min(speed, Parameters.KeeperMoveSpeed);
             Vec3 desiredVelocity = player.Facing * speed;
             Vec3 change = desiredVelocity - player.Velocity;
             float maxChange = (speed > player.Velocity.Length ? Parameters.Acceleration : Parameters.Braking) * dt;
@@ -326,11 +342,12 @@ namespace Wynnyng.Core
             if (BallOwner == actor)
             {
                 Vec3 aim = new Vec3(command.MoveX, 0f, command.MoveY);
-                if (aim.LengthSquared < DirectionEpsilon) aim = Players[actor].Facing;
+                bool automaticAim = aim.LengthSquared < DirectionEpsilon;
+                if (automaticAim) aim = Players[actor].Facing;
                 if (command.ShootReleased && charging[team])
                 {
                     float strength = Clamp01(charge[team] / Parameters.ChargeSeconds);
-                    charge[team] = 0f; charging[team] = false; return Shoot(actor, ball, aim, strength);
+                    charge[team] = 0f; charging[team] = false; return Shoot(actor, ball, aim, strength, false, automaticAim);
                 }
                 if (command.PassPressed) return Pass(actor, ball, aim, FootballKickKind.Pass);
                 if (command.ThroughPressed) return Pass(actor, ball, aim, FootballKickKind.Through);
@@ -370,22 +387,33 @@ namespace Wynnyng.Core
             dribbleCooldown[actor] = Parameters.DribbleInterval;
             return new FootballBallAction { HasKick = true, Velocity = velocity, Actor = actor, Kind = FootballKickKind.Dribble };
         }
-        private FootballBallAction Shoot(int actor, Vec3 ball, Vec3 aim, float charge01, bool cpu = false)
+        private FootballBallAction Shoot(int actor, Vec3 ball, Vec3 aim, float charge01, bool cpu = false, bool automaticAim = false)
         {
             int attack = AttackSign(Players[actor].Team);
-            float goalX = 0f;
-            if (cpu)
+            Vec3 centre = new Vec3(0f, 0f, attack * pitch.HalfLength);
+            Vec3 direct = Normalize(new Vec3(centre.X - ball.X, 0f, centre.Z - ball.Z));
+            Vec3 direction = Normalize(aim);
+            if (direction.LengthSquared < DirectionEpsilon) direction = Players[actor].Facing;
+            bool assisted = cpu || (DistanceXZ(centre, ball) <= Parameters.ShotAssistanceDistance &&
+                (automaticAim || Dot(direction, direct) >= Parameters.ShotAssistanceMinDot));
+            if (assisted)
             {
                 FootballPlayer keeper = Players[(1 - Players[actor].Team) * PlayersPerTeam];
                 float side = keeper.Position.X > 0f ? -1f : 1f;
                 if (Math.Abs(keeper.Position.X) < Parameters.PlayerRadius) side = random.NextUnit() < 0.5f ? -1f : 1f;
-                goalX = side * (pitch.GoalHalfWidth - pitch.BallRadius) * Parameters.ShotCornerFraction;
+                if (!cpu && !automaticAim && Math.Abs(direction.X) > Parameters.ShotAimDeadZone)
+                    side = direction.X > 0f ? 1f : -1f;
+                float halfMouth = pitch.GoalHalfWidth - pitch.BallRadius - Parameters.ShotPostMargin;
+                float corner = side * halfMouth * Parameters.ShotCornerFraction;
+                float rawTarget = ball.X;
+                float towardGoal = direction.Z * attack;
+                if (towardGoal > Parameters.ShotAssistanceMinDot)
+                    rawTarget += direction.X * Math.Abs(centre.Z - ball.Z) / towardGoal;
+                rawTarget = Clamp(rawTarget, -halfMouth, halfMouth);
+                float goalX = cpu || automaticAim ? corner :
+                    rawTarget + (corner - rawTarget) * Parameters.ShotAimAssist;
+                direction = Normalize(new Vec3(goalX - ball.X, 0f, centre.Z - ball.Z));
             }
-            Vec3 goal = new Vec3(goalX, 0f, attack * pitch.HalfLength);
-            Vec3 direct = Normalize(new Vec3(goal.X - ball.X, 0f, goal.Z - ball.Z));
-            Vec3 direction = cpu ? direct : Normalize(aim);
-            if (direction.LengthSquared < DirectionEpsilon) direction = Players[actor].Facing;
-            if (Dot(direction, direct) > 0f) direction = Normalize(Vec3.Lerp(direction, direct, Parameters.ShotAimAssist));
             float spread = (random.NextUnit() * 2f - 1f) * Parameters.ShotSpreadRadians;
             direction = Rotate(direction, spread);
             float speed = Parameters.ShotMinSpeed + (Parameters.ShotMaxSpeed - Parameters.ShotMinSpeed) * charge01;
@@ -455,17 +483,27 @@ namespace Wynnyng.Core
             }
             return result;
         }
-        private FootballBallAction TryGoalkeeper(Vec3 ball, Vec3 velocity)
+        private FootballBallAction TryGoalkeeper(Vec3 ball, Vec3 velocity, float dt)
         {
             for (int team = 0; team < 2; team++)
             {
                 int actor = team * PlayersPerTeam;
                 FootballPlayer keeper = Players[actor];
-                if (kickCooldown[actor] > 0f || ball.Y > Parameters.KeeperHeight || velocity.Length > Parameters.KeeperSaveSpeed ||
-                    DistanceXZ(keeper.Position, ball) > Parameters.KeeperReach) continue;
                 int attack = AttackSign(team);
-                if (pitch.HalfLength + ball.Z * attack > Parameters.KeeperAdvance + Parameters.KeeperReach) continue;
-                bool save = velocity.Z * attack < 0f && velocity.Length >= Parameters.PassMinSpeed;
+                bool incoming = velocity.Z * attack < 0f;
+                bool threat = incoming && velocity.Length > Parameters.KeeperCollectionSpeed &&
+                    pitch.HalfLength + ball.Z * attack <= Parameters.KeeperAwarenessDistance;
+                keeperThreatTime[team] = threat ? keeperThreatTime[team] + dt : 0f;
+                if (kickCooldown[actor] > 0f || ball.Y > Parameters.KeeperHeight || velocity.Length > Parameters.KeeperSaveSpeed) continue;
+                float depth = (ball.Z - keeper.Position.Z) * attack;
+                if (depth < -pitch.BallRadius || depth > Parameters.KeeperContactDepth) continue;
+                bool save = incoming && velocity.Length >= Parameters.PassMinSpeed;
+                if (!incoming && velocity.Length > Parameters.KeeperCollectionSpeed) continue;
+                float reach = Parameters.KeeperStandingReach;
+                if (threat)
+                    reach = Math.Min(Parameters.KeeperReach, reach +
+                        Math.Max(0f, keeperThreatTime[team] - Parameters.KeeperReactionSeconds) * Parameters.KeeperDiveSpeed);
+                if (Math.Abs(ball.X - keeper.Position.X) > reach) continue;
                 if (save) Stats(team).Saves++;
                 Vec3 direction = Normalize(new Vec3(-ball.X, 0f, attack * pitch.HalfLength));
                 FootballBallAction action = Kick(actor, direction * Parameters.KeeperClearSpeed + new Vec3(0f, Parameters.LobVerticalSpeed, 0f),

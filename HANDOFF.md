@@ -54,10 +54,10 @@ Pausa altera Time.timeScale=0 e cancela cargas/buffers. Ao continuar, Shoot fica
 | Turn8 rad/s; stamina dreno0,055 / regen0,035 | Giro, fadiga |
 | DribbleLead0,85m; interval0,12s; correction8 | Proximidade/controle da bola |
 | Passe12..22 m/s; cone±30°; lead0,35 / through1,1s | Assistência e recepção |
-| Chute18..32 m/s; charge0,95s; spin22; erro0,045rad | Potência/curva |
+| Chute18..32 m/s; charge0,95s; spin22; erro 0,018 rad | Potência/curva |
 | AIdecision0,1s; reaction0,22s; intercept3s; arrival1,8m | Perseguição e chegada |
 | Pressão3,2m; tacklechance0,25; passinterval3,6s | Ritmo da CPU |
-| Keeperreach2,4m; height2,8m; clear24 m/s | Rebatidas simplificadas |
+| Goleiro: alcance parado 0,6 m; máximo 1,55 m; reação 0,22 s; reposição 24 m/s | Rebatidas simplificadas |
 | Câmeraoffset(42,36,0); FOV55; damping4 | Leitura da ação |
 
 SO Ball preserva massa0,43/raio0,11/Cd0,25/Magnus0,0015/restituição0,65/rolamento0,015. Pitch105×68/gol7,32×2,44. Simulation controla solver/fixed/gravity. Configurações fora de sliders exigem parar o Play e editarSO.
@@ -72,9 +72,9 @@ GateXML aceita apenas o teste gráfico antigo ignorado em batch (nome/motivo exa
 
 ## Testes e evidências
 
-Executado localmente: **69 testes .NET aprovados**. Inclui23 casos FootballCore,3buffer,41Core anteriores e2checks alocação. CPU×CPU por600 s com integrador simplificado:0:0, chutes3:0, passes222:238, defesas0:2, posse117,277s:132,645s. Evidência de progresso/estabilidade, **não de balanceamento bom**; volume de finalizações baixo é risco conhecido. Cada loop medido de60.000 passos, após aquecimento, alocou0 bytes gerenciados na thread. Não cobre Unity/PhysX/CM/TMP/UI/render.
+Executado localmente: **80 testes .NET aprovados**. Inclui 23 casos FootballCore, 11 finalizações, 3 de buffer, 41 Core anteriores e 2 verificações de alocação. CPU × CPU por 600 s com integrador simplificado: 1:0, chutes 3:2, passes 226:222, defesas 2:2, posse 119,194 s:109,025 s. Evidência de progresso/estabilidade, **não de balanceamento bom**; volume de finalizações baixo é risco conhecido. Cada loop medido de60.000 passos, após aquecimento, alocou0 bytes gerenciados na thread. Não cobre Unity/PhysX/CM/TMP/UI/render.
 
-Preparados, **não executados aqui**:92 casos UnityEditMode e20PlayMode (19executáveis no batch,1pixel ignorado). Novos PlayMode verificam22corpos/bola física, movimentoCPU, gol único/reinício, pausa/restauração de globais, tuning isolado e apresentação/menu. Fixtures removem ambos os tipos de bootstrap antes de criar o seu para evitar cenas sobrepostas.
+Preparados, **não executados aqui**:103 casos Unity EditMode e 21 PlayMode (20 executáveis no batch, 1 de pixels ignorado). Novos PlayMode verificam22corpos/bola física, movimentoCPU, gol único/reinício, pausa/restauração de globais, tuning isolado e apresentação/menu. Fixtures removem ambos os tipos de bootstrap antes de criar o seu para evitar cenas sobrepostas.
 
 Checklist:ver22atletas/câmera/cores; mover/sprint/passe/chute/troca; CPU atacar/goleiro rebater; gol/reinício/saída; pausa congela; sliders/rebind; dois controles/hotplug; halftime/fulltime/NovaPartida; saída/reabertura; medirGPU/GC/FPS no player. Não registrar aceite Unity sem executar.
 
@@ -93,3 +93,15 @@ Checklist:ver22atletas/câmera/cores; mover/sprint/passe/chute/troca; CPU atacar
 Não há regras completas/árbitro/impedimento/faltas/cartões/substituições; replays; áudio; modelos rigados/animaçãoHumanoid; estádio/torcida final; dadosBrasileirão/calendário/save/carreira/edição. Arte é blockout original, shaders unlit; goleiro/defesa/IA são simplificados. Sem Blender/Mixamo necessário. Não prometer60FPS na GTX 1060 sem medição, nem chamar preparador de player pronto.
 
 Próximo trabalho deve partir da partida atual, testar no Unity real, corrigir erros observados e balancear ritmo/finalizações/posse antes de expandir modos ou arte. Usuário quer jogar e atualizar sem colar scripts; manter mesmo preparador e defaults prontos.
+
+## Correção de finalização após relato “impossível fazer gol”
+
+Causas reproduzidas: a assistência humana levava ao centro, o goleiro afastava imediatamente dentro de um raio de 2,4 m e a diagonal podia apontar fora das traves. Seis dos oito cenários iniciais de finalização falharam antes da correção.
+
+Agora Shoot projeta o alvo dentro da boca do gol, com margem de 0,25 m dos postes, assistência 0,9 e dispersão 0,018 rad. Dentro de 40 m, direcional lateral escolhe o canto; sem direcional busca o lado livre, mesmo se a última orientação corporal estiver para trás. A corrida carregando chute é limitada a 55% e desabilita sprint enquanto há posse. Chutes explicitamente para trás ou fora da distância assistida mantêm direção livre.
+
+Goleiro: contato frontal até 0,7 m e alcance parado de 0,6 m; reação de 0,22 s antes de estender gradualmente até 1,55 m a 3,5 m/s. Deslocamento máximo 2,8 m/s. Bola já atrás de seu plano, bola rápida se afastando e bola parada fora do corpo não são capturadas remotamente. O modelo ainda é simplificado e a extensão não possui animação de mergulho. Todos os valores estão em FootballParameters e no SO Football.asset. O teste antigo de defesa agora coloca a bola na área real de contato, sem restaurar o alcance amplo antigo.
+
+FinishingTests tem 11 casos compartilhados, aprovados em .NET: cantos de 18 m nos dois tempos; parado a 12 m; finalização a 6 m; chute fraco central defendido; bola fora das traves sem gol; três proteções de alcance/captura. Integra o projétil lançado sob arrasto/Magnus/gravidade/quique e chama a simulação com goleiro ativo. Durante a carga mantém a bola nos pés para isolar a finalização; não substitui PhysX.
+
+Novo PlayMode PoweredCornerShotScoresWithTheRealBallAndActiveGoalkeeper usa Physics.simulationMode=Script e Physics.Simulate a 60 Hz, bola/cápsulas/traves reais, carga e drible, exigindo um gol sem teleportar além da linha. A fixture restaura o modo físico em finally. Esse teste está preparado, mas não foi executado neste ambiente sem Unity. O preparador o executará no PC antes do build.

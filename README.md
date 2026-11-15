@@ -39,6 +39,8 @@ Os clubes e jogadores são fictícios; não há escudos, elenco ou marcas oficia
 
 O movimento acompanha a câmera. Sem gamepad, o jogador 1 usa o teclado; ao conectar um pad, ele passa a controlar o jogador 1. No menu, **Remapear controles** salva os overrides neste PC. Dois jogadores locais exigem dois controles; o teclado é fallback apenas do jogador 1. Se o segundo controle desconectar, o adversário volta à CPU.
 
+Para finalizar, segure e solte **J / Sul**. Perto do gol, soltar sem direcional busca um canto livre; inclinar para um lado escolhe o canto com assistência dentro da boca do gol. A corrida desacelera enquanto você carrega o chute. O goleiro tem reação e alcance limitados, mas continua defendendo bolas direcionadas ao corpo.
+
 ## Ajustar a sensação
 
 Abra **Esc / Start → Ajustar a sensação**. Os sliders alteram corrida, sprint, força máxima de passe/chute e raio de pressão da CPU. As mudanças afetam somente a cópia da partida atual e são preservadas ao escolher Nova partida; reiniciar o aplicativo carrega o SO original.
@@ -94,16 +96,16 @@ O núcleo usa passo de 60 Hz e RNG injetado. PhysX mantém a bola; a simulação
 
 ## Testes e checklist
 
-Executados fora do Unity: **69 testes .NET**, incluindo CPU × CPU durante 600 segundos simulados e duas verificações de 60.000 passos sem alocação gerenciada no núcleo. Não são medições de FPS nem testes de PhysX. As verificações do preparador são separadas do jogo. [Resultados e limites](docs/VALIDACAO.md).
+Executados fora do Unity: **80 testes .NET**, incluindo 11 regressões de finalização com goleiro ativo, CPU × CPU durante 600 segundos simulados e duas verificações de 60.000 passos sem alocação gerenciada no núcleo. Não são medições de FPS nem testes de PhysX. As verificações do preparador são separadas do jogo. [Resultados e limites](docs/VALIDACAO.md).
 
-Preparados para o Unity: **92 casos EditMode e 20 PlayMode**, incluindo os testes antigos. O único teste de pixels antigo é ignorado em batch; qualquer outro ignore/falha bloqueia o preparador.
+Preparados para o Unity: **103 casos EditMode e 21 PlayMode**, incluindo um chute com bola e colisões PhysX contra o goleiro. O único teste de pixels antigo é ignorado em batch; qualquer outro ignore/falha bloqueia o preparador.
 
 Checklist no player:
 
 - Ver 22 jogadores e dois uniformes; começar com você contra a CPU.
 - Mover, correr, passar, carregar/soltar chute e trocar jogador.
 - Observar o adversário perseguir, passar, finalizar e o goleiro rebater.
-- Fazer gol e conferir placar/reinício; sair pela lateral e conferir reposição de treino.
+- Finalizar de 6, 12 e 18 m, parado e mirando para os cantos; conferir defesa de chute fraco central, placar/reinício e reposição de treino quando a bola sai.
 - Pausar e confirmar que bola e relógio param; ajustar sliders e continuar.
 - Escolher CPU × CPU e Nova partida; testar dois controles e desconectar o segundo.
 - Completar dois tempos e reiniciar; fechar/reabrir o player.

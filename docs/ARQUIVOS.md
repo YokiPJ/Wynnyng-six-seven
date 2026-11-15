@@ -56,6 +56,7 @@ Assets/Wynnyng/Scenes/FootballMatch.unity
 Assets/Wynnyng/Scenes/Phase01A.unity
 Assets/Wynnyng/Tests/EditMode/ConfigurationTests.cs
 Assets/Wynnyng/Tests/EditMode/CoreTests.cs
+Assets/Wynnyng/Tests/EditMode/FinishingTests.cs
 Assets/Wynnyng/Tests/EditMode/FootballConfigurationTests.cs
 Assets/Wynnyng/Tests/EditMode/FootballCoreTests.cs
 Assets/Wynnyng/Tests/EditMode/PlayerCommandBufferTests.cs

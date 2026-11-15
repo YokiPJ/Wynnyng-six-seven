@@ -60,10 +60,15 @@ namespace Wynnyng.Core
         public float ShotMaxSpeed = 32f;
         public float ShotVerticalSpeed = 3f;
         public float ShotLiftByCharge = 3f;
-        public float ShotSpreadRadians = 0.045f;
-        public float ShotAimAssist = 0.75f;
+        public float ShotSpreadRadians = 0.018f;
+        public float ShotAimAssist = 0.9f;
         public float ShotSpin = 22f;
-        public float ShotCornerFraction = 0.8f;
+        public float ShotCornerFraction = 0.86f;
+        public float ShotPostMargin = 0.25f;
+        public float ShotAimDeadZone = 0.15f;
+        public float ShotAssistanceDistance = 40f;
+        public float ShotAssistanceMinDot = 0.17f;
+        public float ShotChargeMoveFraction = 0.55f;
         public float TackleDistance = 2.2f;
         public float TackleCooldown = 0.8f;
         public float AiTackleChance = 0.25f;
@@ -86,8 +91,15 @@ namespace Wynnyng.Core
         public float AutoSwitchDelay = 0.65f;
         public float KeeperGoalOffset = 1.4f;
         public float KeeperAdvance = 6f;
-        public float KeeperReach = 2.4f;
-        public float KeeperHeight = 2.8f;
+        public float KeeperReach = 1.55f;
+        public float KeeperStandingReach = 0.6f;
+        public float KeeperContactDepth = 0.7f;
+        public float KeeperReactionSeconds = 0.22f;
+        public float KeeperDiveSpeed = 3.5f;
+        public float KeeperMoveSpeed = 2.8f;
+        public float KeeperAwarenessDistance = 24f;
+        public float KeeperCollectionSpeed = 4f;
+        public float KeeperHeight = 2.45f;
         public float KeeperSaveSpeed = 42f;
         public float KeeperClearSpeed = 24f;
         public float KeeperHoldSeconds = 0.45f;
@@ -125,8 +137,10 @@ namespace Wynnyng.Core
             }
             if (MatchSeconds < 10f || SprintSpeed < JogSpeed || PassMaxSpeed < PassMinSpeed ||
                 ShotMaxSpeed < ShotMinSpeed || ShotAimAssist > 1f || ShotCornerFraction > 1f ||
+                ShotAimDeadZone >= 1f || ShotAssistanceMinDot > 1f || ShotChargeMoveFraction > 1f ||
+                KeeperStandingReach > KeeperReach || KeeperCollectionSpeed > KeeperSaveSpeed ||
                 AiShotCharge > 1f || AiTackleChance > 1f || PassAssistCosine > 1f ||
-                AiShotCharge > 1f || AiTackleChance > 1f || MinimumSprintStamina > 1f || TiredSpeedFraction > 1f || TeamWidth > 1f ||
+                MinimumSprintStamina > 1f || TiredSpeedFraction > 1f || TeamWidth > 1f ||
                 Formation == null || Formation.Length != FootballMatch.PlayersPerTeam)
                 throw new ArgumentException("Invalid football speed, assistance, match length or formation.");
             for (int i = 0; i < Formation.Length; i++)

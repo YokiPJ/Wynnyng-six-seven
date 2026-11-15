@@ -171,7 +171,8 @@ namespace Wynnyng.Tests.EditMode
         public void GoalkeeperParriesIncomingBallAwayFromOwnGoal()
         {
             FootballMatch match = Create(); EnterPlaying(match);
-            FootballBallAction action = match.Step(Dt, new Vec3(0f, 0.7f, -50f), new Vec3(0f, 0f, -30f), default, default, false);
+            Vec3 contact = match.Players[0].Position + new Vec3(0f, 0.7f, 0.35f);
+            FootballBallAction action = match.Step(Dt, contact, new Vec3(0f, 0f, -30f), default, default, false);
             Assert.That(action.Kind, Is.EqualTo(FootballKickKind.Save));
             Assert.That(action.Velocity.Z, Is.GreaterThan(0f));
             Assert.That(match.HomeStats.Saves, Is.EqualTo(1));

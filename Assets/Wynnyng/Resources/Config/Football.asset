@@ -60,10 +60,15 @@ MonoBehaviour:
     ShotMaxSpeed: 32
     ShotVerticalSpeed: 3
     ShotLiftByCharge: 3
-    ShotSpreadRadians: 0.045
-    ShotAimAssist: 0.75
+    ShotSpreadRadians: 0.018
+    ShotAimAssist: 0.9
     ShotSpin: 22
-    ShotCornerFraction: 0.8
+    ShotCornerFraction: 0.86
+    ShotPostMargin: 0.25
+    ShotAimDeadZone: 0.15
+    ShotAssistanceDistance: 40
+    ShotAssistanceMinDot: 0.17
+    ShotChargeMoveFraction: 0.55
     TackleDistance: 2.2
     TackleCooldown: 0.8
     AiTackleChance: 0.25
@@ -86,8 +91,15 @@ MonoBehaviour:
     AutoSwitchDelay: 0.65
     KeeperGoalOffset: 1.4
     KeeperAdvance: 6
-    KeeperReach: 2.4
-    KeeperHeight: 2.8
+    KeeperReach: 1.55
+    KeeperStandingReach: 0.6
+    KeeperContactDepth: 0.7
+    KeeperReactionSeconds: 0.22
+    KeeperDiveSpeed: 3.5
+    KeeperMoveSpeed: 2.8
+    KeeperAwarenessDistance: 24
+    KeeperCollectionSpeed: 4
+    KeeperHeight: 2.45
     KeeperSaveSpeed: 42
     KeeperClearSpeed: 24
     KeeperHoldSeconds: 0.45

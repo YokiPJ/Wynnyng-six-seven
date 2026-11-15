@@ -113,7 +113,7 @@ namespace Wynnyng.Presentation
             shotFill = Bar(power, "Power", new Vector2(pad, -h * 1.35f), panelWidth - pad * 2f,
                 h * 0.2f, config.AwayColor);
             TextMeshProUGUI help = Label(transform,
-                "WASD / setas: mover   J: chute (segure)   K: passe / pressao   I: profundidade   L: lancamento\n" +
+                "WASD / setas: mover   J: segure e solte para chutar; sem direcional = canto livre   K: passe   I: profundidade   L: lancamento\n" +
                 "Shift: correr   Tab: trocar   Esc: menu   |   Controle: Sul chute, Oeste passe, Norte profundidade, Leste alto, RT correr, LB trocar, Start menu",
                 Vector2.zero, presentation.ReferenceResolution.x - pad * 2f, h * 1.5f, Color.white,
                 presentation.FontSize * 0.68f, TextAlignmentOptions.Center);
